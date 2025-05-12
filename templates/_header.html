@@ -1,0 +1,64 @@
+<header>
+    <a href="/" title="Back to homepage">
+        <img src="{{ url_for('static', filename='icons/shelter.svg') }}" alt="Shelter Logo" class="logo">
+    </a>
+    <div id="desktop_menu">
+        <nav id="main_nav">
+            <ul>
+                <li><a class="{{ active_index }}" href="/" mix-get="/" mix-page>Home</a></li>
+            </ul>
+            <div id="search_container">
+                <input id="input_search" oninput="search()" class="" type="text" placeholder="Search">
+                <div id="search_results" class="hidden"></div>
+            </div>
+        </nav>
+        {% if is_session %}
+        <nav id="utility_logged">
+            <ul>
+                <li id="profile_desk"><a class="{{ active_profile }}" href="/profile" title="Profile">Profile</a></li>
+                <li id="admin_desk"><a href="/admin" title="Admin">Admin</a></li>
+                <li><a href="/logout" class="btnLogout">Logout</a></li>
+            </ul>
+        </nav>
+        {% else %}
+        <nav id="utility_not_logged">
+            <ul>
+                <li><a class="{{ active_login }}" href="/login" title="Log in">Log in</a></li>
+                <li><a class="{{ active_signup }}" href="/signup" title="Sign up">Sign up</a></li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+
+    <button id="burger_btn" aria-label="Open menu">
+        <img src="{{ url_for('static', filename='icons/Menu.svg') }}" alt="Menu icon">
+    </button>
+
+    <div id="side_menu">
+        <button id="close_btn" aria-label="Close menu">
+            <img src="{{ url_for('static', filename='icons/X.svg') }}" alt="Close menu icon">
+        </button>
+        {% if is_session %}
+        <nav id="mobile_utility_logged">
+            <ul>
+                <li id="profile_mob"><a class="{{ active_profile }}" href="/profile">Profile</a></li>
+                <li id="admin_mob"><a href="/admin">Admin</a></li>
+                <li><a href="/logout" class="btnLogout">Logout</a></li>
+            </ul>
+        </nav>
+        {% else %}
+        <nav id="mobile_utility_not_logged">
+            <ul>
+                <li><a class="{{ active_login }}" href="/login">Log in</a></li>
+                <li><a class="{{ active_signup }}" href="/signup">Sign up</a></li>
+            </ul>
+        </nav>
+        {% endif %}
+        <nav id="mobile_main_nav">
+            <ul>
+                <li><a class="{{ active_index }}" href="/" mix-get="/" mix-page>Home</a></li>
+            </ul>
+        </nav>
+    </div>
+    <div id="overlay"></div>
+</header>

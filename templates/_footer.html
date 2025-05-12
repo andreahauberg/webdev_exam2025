@@ -1,0 +1,58 @@
+<footer>
+    <div id="social_icons">
+        <a href="https://twitter.com" target="_blank">
+            <img src="{{ url_for('static', filename='icons/Twitter.svg') }}" alt="Twitter logo">
+        </a>
+        <a href="https://linkedin.com" target="_blank">
+            <img src="{{ url_for('static', filename='icons/Linkedin.svg') }}" alt="LinkedIn logo">
+        </a>
+        <a href="https://facebook.com" target="_blank">
+            <img src="{{ url_for('static', filename='icons/Facebook.svg') }}" alt="Facebook logo">
+        </a>
+        <a href="https://instagram.com" target="_blank">
+            <img src="{{ url_for('static', filename='icons/Instagram.svg') }}" alt="Instagram logo">
+        </a>
+    </div>
+    <p id="footer-copy">&copy; 2023 KEA Development</p>
+</footer>
+
+
+    <script src="{{ url_for('static', filename='js/mixhtml.js') }}" ></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+
+        var map = L.map('map').setView([55.6, 11.9], 8);
+
+        // Add the OpenStreetMap tile layer to the map
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+
+
+        {% for item in items: %} 
+        
+            var customIcon = L.divIcon({
+                className: 'custom-marker', // Class for custom styling
+                html: `<div class="custom-marker">
+    <img mix-get="/items/{{ item.item_pk }}" src="{{ url_for('static', filename='icons/' + item.item_icon) }}">
+</div>`, // Custom content inside the div
+    iconSize: [32, 32],       // size of the icon
+    iconAnchor: [16, 16],     // point of the icon which will correspond to marker's location
+    popupAnchor: [0, -16]
+            });
+
+            var marker = L.marker([{{ item.item_lat }}, {{ item.item_lon }}], { icon: customIcon }).addTo(map)           
+            .openPopup()
+            // marker.on('click', onMarkerClick)
+        {% endfor %}
+
+        mix_convert()
+           
+    </script>
+
+    
+    
+
+</body>
+</html>

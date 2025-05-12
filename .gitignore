@@ -34,3 +34,14 @@ Thumbs.db
 # Pip install cache
 pip-wheel-metadata/
 *.egg-info/
+
+
+# Ignore image files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.svg
+*.webp

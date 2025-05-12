@@ -1,13 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    
-    <title>Document</title>
-</head>
+{% include "_head.html" %}
+
 <body>
-    <h1>Hello000 Andrea</h1>
-</body>
-</html>
+    {% include "_header.html" %}
+    <main>
+            
+        <section id="map">
+
+        </section>
+    
+        <section id="items_more">
+            <div id="items">
+                {% for item in items: %}
+                {% include "_item_mini.html" %}
+                {% endfor %}
+            </div>
+            {% include "_button_more_items.html" %}
+        </section>
+
+        <section id="right">
+            {% set item = items[0] %}
+            <div id="item">
+                {% include "_item.html" %}
+            </div>
+        </section>
+
+    </main>
+    {% include "_footer.html" %}
