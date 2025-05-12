@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+env/
+
+
+# Environment variables and secrets
+.env
+
+# Docker files (you might want to keep these if deploying with Docker elsewhere)
+docker-compose.yml
+Dockerfile
+
+# PythonAnywhere-related
+*.pyc
+instance/
+.webassets-cache
+
+# IDEs/editors
+.vscode/
+.idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Pip install cache
+pip-wheel-metadata/
+*.egg-info/
