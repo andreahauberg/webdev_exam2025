@@ -163,7 +163,6 @@ body {
     width: 100%;
     max-width: var(--form-max-width);
     margin: var(--spacing-xl) auto;
-    padding: 0 var(--spacing-xl);
 }
 
 #input_search {
@@ -181,11 +180,11 @@ body {
     width: 100%;
     background: var(--input-bg);
     z-index: var(--z-index-1000);
-    display: none;
     flex-direction: column;
     box-shadow: 0px var(--shadow-px-sm) var(--shadow-px-mdlg) rgba(0, 0, 0, var(--opacity-md));
     border-radius: var(--border-radius-md);
     overflow: hidden;
+    padding: var(--spacing-lg) var(--spacing-xxxl);
 }
 
 #search_results.active {
