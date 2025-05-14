@@ -1,7 +1,12 @@
-from flask import Flask, render_template, request
+from flask import Flask, session, render_template, request, redirect, url_for
 from flask_session import Session
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+import time
 import x
 import json
+import os
+import uuid
 import requests
 
 app = Flask(__name__)
@@ -40,10 +45,20 @@ def disable_cache(response):
     return response
 
 
+#############################
+@app.get("/send-email")
+def send_email():
+    try:
+        x.send_email()
+        return "email"
+    except Exception as ex:
+        ic(ex)
+        return "error"
+
 
 ##############################
 @app.get("/")
-def view_index():
+def show_index():
     try:
         db, cursor = x.db()
         q = "SELECT * FROM items ORDER BY item_created_at LIMIT 2"
@@ -55,12 +70,225 @@ def view_index():
         ic(rates)
         # Convert the text rates to json
         rates = json.loads(rates)
-        return render_template("index.html", title="Shelter", items=items, rates=rates)
+        is_session = False
+        if session.get("user"): is_session = True
+        active_index = "active"
+        return render_template("index.html", title="Shelter", items=items, is_session = is_session, active_index=active_index, rates=rates)
     except Exception as ex:
         ic(ex)
         return "ups"
     finally:
         pass
+
+
+##############################
+@app.get("/profile")
+def show_profile():
+    active_profile ="active"
+    error_message = request.args.get("error_message", "")
+    try:
+        is_session = False
+        if session["user"]: is_session = True
+        return render_template("profile.html", title="Profile", user=session["user"], x=x, is_session=is_session, active_profile=active_profile, 
+                           error_message=error_message,
+                           old_values={})
+    except Exception as ex:
+        ic(ex)
+        return redirect(url_for("show_login"))
+
+
+##############################
+@app.get("/signup")
+def show_signup():
+    active_signup ="active"
+    error_message = request.args.get("error_message", "")
+    try:
+        return render_template("signup.html", title="Shelter Signup", x=x, active_signup=active_signup, 
+                           error_message=error_message,
+                           old_values={})
+    except Exception as ex:
+        ic(ex)
+    finally:
+       pass
+
+##############################
+@app.post("/signup")
+def signup():
+    try:
+        user_pk = str(uuid.uuid4())
+        user_name = x.validate_user_name()
+        user_username = x.validate_user_username()
+        user_last_name = x.validate_user_last_name()
+        user_email = x.validate_user_email()
+        user_password = x.validate_user_password()
+        hashed_password = generate_password_hash(user_password)
+        verification_key = str(uuid.uuid4())
+        # ic(hashed_password)
+        user_created_at = int(time.time())
+        user_updated_at = int(time.time())
+
+
+        q = """INSERT INTO users
+(user_pk, user_name, user_last_name, user_email, user_username, user_password,
+ user_created_at, user_updated_at, user_deleted_at,
+ user_is_blocked, user_verified_at, user_verification_key, user_role)
+VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0, %s, 'user')
+"""
+
+
+        db, cursor = x.db()
+        cursor.execute(q, (
+        user_pk,
+        user_name, 
+        user_last_name, 
+        user_email,
+        user_username, 
+        hashed_password,
+        user_created_at, 
+        user_updated_at, 
+        verification_key
+        ))
+        if cursor.rowcount != 1: 
+            raise Exception("System under maintenance")
+        
+        db.commit()
+
+        x.send_email(user_name, user_email, verification_key)
+        return redirect(url_for("show_login", message="Signup ok"))
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        old_values = request.form.to_dict()
+
+        if "username" in str(ex):
+            old_values.pop("user_username", None)
+            return render_template("signup.html",                                   
+                error_message="Invalid username", old_values=old_values, user_user_name_error="input_error")
+        if "first name" in str(ex):
+            old_values.pop("user_name", None)
+            return render_template("signup.html",
+                error_message="Invalid name", old_values=old_values, user_name_error="input_error")
+        if "last name" in str(ex):
+            old_values.pop("user_last_name", None)
+            return render_template("signup.html",
+                error_message="Invalid last name", old_values=old_values, user_last_name_error="input_error")
+        if "Invalid email" in str(ex):
+            old_values.pop("user_email", None)
+            return render_template("signup.html",
+                error_message="Invalid email", old_values=old_values, user_email_error="input_error")
+        if "password" in str(ex):
+            old_values.pop("user_password", None)
+            return render_template("signup.html",
+                error_message="Invalid password", old_values=old_values, user_password_error="input_error")
+
+        if "users.user_email" in str(ex):
+            return redirect(url_for("show_signup",
+                error_message="Email already exists", old_values=old_values, email_error=True))
+        if "users.user_username" in str(ex): 
+            return redirect(url_for("show_signup", 
+                error_message="Username already exists", old_values=old_values, user_user_name_error=True))
+        return redirect(url_for("show_signup", error_message=ex.args[0]))
+
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close() 
+
+
+
+#############################
+@app.get("/verify/<verification_key>")
+def verify(verification_key):
+    try:
+        db, cursor = x.db()
+ 
+        q = "SELECT user_pk FROM users WHERE user_verification_key = %s AND user_verified_at = 0"
+
+        cursor.execute(q, (verification_key,))
+        user = cursor.fetchone()
+ 
+        if not user:
+            return "Invalid or already used verification key."
+        current_time = int(time.time())
+        q_update = """UPDATE users
+                      SET user_verified_at = %s,
+                        user_verification_key = NULL
+                      WHERE user_pk = %s"""
+        cursor.execute(q_update, (current_time, user["user_pk"]))
+        db.commit()
+        return "Your account has been verified!"
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals():
+            db.rollback()
+        return "Verification failed", 500
+    finally:
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
+
+
+
+##############################
+@app.get("/login")
+def show_login():
+    active_login = "active"
+    message = request.args.get("message", "")
+    try:
+        return render_template("login.html", title="Shelter Login", x=x, active_login = active_login,  message = message, old_values={})
+    except Exception as ex:
+        ic(ex)
+    finally:
+       pass
+
+
+##############################
+@app.post("/login")
+def login():
+    try:
+        user_email = x.validate_user_email()
+        user_password = x.validate_user_password()
+        db, cursor = x.db()
+        q = "SELECT * FROM users WHERE user_email = %s"
+        cursor.execute(q, (user_email,))
+        user = cursor.fetchone() 
+        ic(user)
+        if not user: raise Exception("User not found")
+        if user["user_verified_at"] == 0: raise Exception("User not verified")
+        if not check_password_hash(user["user_password"], user_password):
+            raise Exception("Invalid credentials")
+        user.pop("user_password")
+        session["user"] = user  
+    
+        if user["user_role"] == "admin":
+            return redirect(url_for("show_admin"))
+        else:
+            return redirect(url_for("show_profile"))
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        old_values = request.form.to_dict()
+
+        if "Invalid email" in str(ex):
+            old_values.pop("user_email", None)
+            return render_template("login.html",
+                message="Invalid email", old_values=old_values)
+        
+        if "password" in str(ex):
+            old_values.pop("user_password", None)
+            return render_template("login.html",
+                message="Invalid password", old_values=old_values)
+        return redirect(url_for("show_login", message=ex.args[0]))
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+##############################
+@app.get("/logout")
+def logout():
+    session.pop("user")
+    return redirect(url_for("show_login"))
 
 
 ##############################
@@ -177,3 +405,231 @@ def search():
         ic(ex)
         return "x", 400
 
+
+
+
+#################################
+
+app.config['UPLOAD_FOLDER'] = 'static/uploads/'
+
+@app.post("/add-item")
+def add_item():
+    try:
+        item_pk = str(uuid.uuid4())
+        item_name = x.validate_item_name()
+        item_address = x.validate_item_address()
+        item_lat = x.validate_item_lat()
+        item_lon = x.validate_item_lon()
+        item_image = x.validate_item_image()
+        item_created_at = int(time.time())
+        item_price = x.validate_item_price()
+        
+        image_filename = None
+        if item_image:
+            image_filename = secure_filename(item_image.filename)
+            upload_dir = os.path.join("static", "uploads")
+            os.makedirs(upload_dir, exist_ok=True)
+            item_image.save(os.path.join(upload_dir, image_filename))
+        
+        db, cursor = x.db()
+        q = """INSERT INTO items
+               (item_pk, item_name, item_address, item_lat, item_lon, item_image, item_created_at, item_price)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+        cursor.execute(q, (
+            item_pk, 
+            item_name, 
+            item_address, 
+            item_lat, 
+            item_lon, 
+            image_filename,
+            item_created_at,
+            item_price
+            ))
+        if cursor.rowcount != 1:
+            raise Exception("Could not insert item")
+
+        db.commit()
+
+        return redirect(url_for("show_index"))
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        old_values = request.form.to_dict()
+        
+        if "Shelter name" in str(ex):
+            old_values.pop("item_name", None)
+            return render_template("add-item.html", error_message="input_error")
+        
+        if "Address" in str(ex):
+            old_values.pop("item_address", None)
+            return render_template("add-item.html", error_message="input_error")
+        
+        if "latitude" in str(ex):
+            old_values.pop("item_lat", None)
+            return render_template("add-item.html", error_message="input_error")
+        
+        if "latitude" in str(ex):
+            old_values.pop("item_longitude", None)
+            return render_template("add-item.html", error_message="input_error")
+        
+        if "price" in str(ex):
+            old_values.pop("item_price", None)
+            return render_template("add-item.html", error_message="input_error")
+        
+        return redirect(url_for("show_profile", error_message=str(ex)))
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+
+
+
+
+###############################
+@app.get("/admin")
+def show_admin():
+    try:
+        db, cursor = x.db()
+
+        # Get users
+        q_users = "SELECT * FROM users"
+        cursor.execute(q_users)
+        users = cursor.fetchall()
+
+        # Get items (like on index)
+        q_items = "SELECT * FROM items ORDER BY item_created_at"
+        cursor.execute(q_items)
+        items = cursor.fetchall()
+
+        # Load rates from file
+        rates = ""
+        with open("rates.txt", "r") as file:
+            rates = file.read()
+        rates = json.loads(rates)  # Convert to dict
+
+        # Session check
+        is_session = 'user' in session
+
+        # Optional: Set 'active_admin' to highlight current nav
+        active_admin = "active"
+
+        return render_template("admin.html",
+                               users=users,
+                               items=items,
+                               rates=rates,
+                               is_session=is_session,
+                               active_admin=active_admin)
+    except Exception as ex:
+        ic(ex)
+        return str(ex)
+    finally:
+        pass
+
+
+
+##############################
+@app.patch("/block/<user_pk>")
+def block_user(user_pk):
+    try:
+        # validate the user_pk
+        db, cursor = x.db()
+        q = "UPDATE users SET user_blocked_at = %s WHERE user_pk = %s"
+        blocked_at = int(time.time())
+        cursor.execute(q, (blocked_at, user_pk))
+        db.commit()
+        user = {
+            "user_pk":user_pk
+        }
+        button_unblock = render_template("_button_unblock_user.html", user=user)
+        return f"""
+        <mixhtml mix-replace="#block-{user_pk}">
+            {button_unblock}
+        </mixhtml>
+        """
+    except Exception as ex:
+        ic(ex)
+        return str(ex)
+    finally:
+       pass
+
+
+##############################
+@app.patch("/unblock/<user_pk>")
+def unblock_user(user_pk):
+    try:
+        # validate the user_pk
+        # Connect to the db and unblock the user   
+        # validate the user_pk
+        db, cursor = x.db()
+        q = "UPDATE users SET user_blocked_at = %s WHERE user_pk = %s"  
+        cursor.execute(q, (0, user_pk))
+        db.commit()              
+        user = {
+            "user_pk":user_pk
+        }          
+        button_block = render_template("_button_block_user.html", user=user)
+        return f"""
+        <mixhtml mix-replace="#unblock-{user_pk}">
+            {button_block}
+        </mixhtml>
+        """
+    except Exception as ex:
+        ic(ex)
+        return str(ex)
+    finally:
+       pass
+
+
+
+
+##############################
+@app.patch("/block/<item_pk>")
+def block_item(item_pk):
+    try:
+        db, cursor = x.db()
+        blocked_at = int(time.time())
+
+        print(f"Trying to block item: {item_pk} at {blocked_at}")
+
+        q = "UPDATE items SET item_blocked_at = %s WHERE item_pk = %s"
+        cursor.execute(q, (blocked_at, item_pk))
+        db.commit()
+
+        cursor.execute("SELECT item_blocked_at FROM items WHERE item_pk = %s", (item_pk,))
+        updated = cursor.fetchone()
+
+        item = {"item_pk": item_pk}
+        button_unblock = render_template("_button_unblock_item.html", item=item)
+        return f"""
+        <mixhtml mix-replace="#block-{item_pk}">
+            {button_unblock}
+        </mixhtml>
+        """
+    except Exception as ex:
+        ic(ex)
+        return str(ex)
+
+
+##############################
+@app.patch("/unblock/<item_pk>")
+def unblock_item(item_pk):
+    try:
+        db, cursor = x.db()
+        q = "UPDATE items SET item_blocked_at = %s WHERE item_pk = %s"
+        cursor.execute(q, (0, item_pk))
+        db.commit()
+        item ={
+            "item_pk": item_pk
+        }
+        button_block = render_template("_button_block_item.html", item=item)
+        return f"""
+        <mixhtml mix-replace="#unblock-{item_pk}">
+            {button_block}
+        </mixhtml>
+        """
+    except Exception as ex:
+        ic(ex)
+        return str(ex)
+    finally:
+       pass

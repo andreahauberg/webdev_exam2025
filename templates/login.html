@@ -2,8 +2,30 @@
 
 <body>
     {% include "_header.html" %}
-    <main>
-            
+    <main id="login">
+<form id="frmLogin" method="POST" action="{{ url_for('login') }}">
+    <h1>Log in</h1>
+
+    {% if message %}
+        <p class="error">{{ message }}</p>
+    {% endif %}
+
+    <div class="field">
+        <label for="txtEmail">Email</label>
+        <input id="txtEmail" name="user_email" type="email" value="{{ old_values.get('user_email', '') }}" required autocomplete="email">
+    </div>
+
+    <div class="field">
+        <label for="txtPassword">Password</label>
+        <input id="txtPassword" name="user_password" type="password" required autocomplete="current-password">
+    </div>
+
+    <button class="btn-primary" type="submit">Log in</button>
+
+    <p class="signup-link">
+        Don't have an account? <a href="{{ url_for('show_signup') }}">Sign up</a>
+    </p>
+</form>
 
     </main>
     {% include "_footer.html" %}

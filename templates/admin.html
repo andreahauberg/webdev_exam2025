@@ -2,8 +2,70 @@
 
 <body>
     {% include "_header.html" %}
-    <main>
-            
+    <main
+          mix-title="{{ title | default('Admin') }}">
+          <h1 id="adminh1">Admin Panel</h1>
+          <div id="admin">
+
+            <section id="user-management-section" class="user-section">
+                <h2>Manage Users</h2>
+                <div class="user-card">          
+                    <div class="user-name">
+                        Username
+                    </div>
+                    <div class="user-action">
+                        Action
+                    </div>
+                </div>
+                {% for user in users %}
+                <div class="user-card">
+                    <div class="username">
+                        {{ user.user_username }}
+                    </div>
+                    <div class="user-action">
+                        {% if user.user_blocked_at == 0 %}
+                        {% include "_button_block_user.html" %}
+                        {% else %}
+                        {% include "_button_unblock_user.html" %}
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+            <section id="item-management-section" class="item-section">
+                <h2>Manage Items</h2>
+                <div class="item-card">
+                    <div class="item-name">
+                        Item Name
+                    </div>
+                    <div class="item-image">
+                        Item Image
+                    </div>
+                    <div class="item-action">
+                        Action
+                    </div>
+                </div>
+            {% for item in items %}
+            <div class="item-card">
+                <div class="item-name">
+                    {{ item.item_name }}
+                </div>
+                <div class="item-image">
+                    <img src="{{ url_for('static', filename='images/'+ item.item_image) }}">
+                </div>
+                <div class="item-action">
+                    {% if item.item_blocked_at == 0 %}
+                    {% include "_button_block_item.html" %}
+                    {% else %}
+                    {% include "_button_unblock_item.html" %}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </section>
+    </div>
+
 
     </main>
     {% include "_footer.html" %}
+

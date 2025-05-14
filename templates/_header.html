@@ -5,18 +5,17 @@
     <div id="desktop_menu">
         <nav id="main_nav">
             <ul>
-                <li><a class="{{ active_index }}" href="/" mix-get="/" mix-page>Home</a></li>
+                <li><a class="{{ active_index }}" href="/" title="Homepage">Home</a></li>
             </ul>
-            <div id="search_container">
-                <input id="input_search" oninput="search()" class="" type="text" placeholder="Search">
-                <div id="search_results" class="hidden"></div>
-            </div>
         </nav>
         {% if is_session %}
         <nav id="utility_logged">
             <ul>
+                {% if session['user']['user_role'] == 'admin' %}
+                <li id="admin_desk"><a class="{{ active_admin }}" href="/admin" title="Admin">Admin</a></li>
+                {% else %}
                 <li id="profile_desk"><a class="{{ active_profile }}" href="/profile" title="Profile">Profile</a></li>
-                <li id="admin_desk"><a href="/admin" title="Admin">Admin</a></li>
+                {% endif %}
                 <li><a href="/logout" class="btnLogout">Logout</a></li>
             </ul>
         </nav>
@@ -42,7 +41,9 @@
         <nav id="mobile_utility_logged">
             <ul>
                 <li id="profile_mob"><a class="{{ active_profile }}" href="/profile">Profile</a></li>
-                <li id="admin_mob"><a href="/admin">Admin</a></li>
+                {% if session['user']['user_role'] == 'admin' %}
+                <li id="admin_mob"><a class="{{ active_admin }}" href="/admin">Admin</a></li>
+                {% endif %}
                 <li><a href="/logout" class="btnLogout">Logout</a></li>
             </ul>
         </nav>
@@ -56,7 +57,7 @@
         {% endif %}
         <nav id="mobile_main_nav">
             <ul>
-                <li><a class="{{ active_index }}" href="/" mix-get="/" mix-page>Home</a></li>
+                <li><a class="{{ active_index }}" a href="/" title="Homepage">Home</a></li>
             </ul>
         </nav>
     </div>

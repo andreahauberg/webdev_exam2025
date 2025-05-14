@@ -3,6 +3,8 @@
 @import "app.css";
 @import "nav.css";
 @import "home.css";
+@import "form.css";
+@import "admin.css";
 
 *{
     margin: 0; padding: 0; box-sizing: border-box;
@@ -12,7 +14,7 @@ body{
     height: 100vh;
     overflow-x: hidden;
 }
-input, button{
+/* input, button{
     width: 100%;
     height: 3rem;
     outline: none;
@@ -22,7 +24,6 @@ input{
     border: 1px solid rgb(100,100,100);
 }
 form{
-    width: 50%;
     input{
         width: 100%;
         height: 2.5rem;
@@ -33,7 +34,7 @@ form{
         height: 2.5rem;
         outline: none;
     }
-}
+} */
 .grid-2{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -74,41 +75,6 @@ form{
 
 } */
 
-#items_more{
-    /* display: flex;
-    flex-direction: column;
-    width: 100%; */
-    #items{
-        display: grid;
-        grid-template-columns: 10fr 10fr;
-        gap: 0.5rem;
-        width: 100%;
-        .item{
-            /* padding:0.2rem;
-            border: 1px solid rgba(0,0,0,0.1);
-            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);            
-            width: 100%; */
-            text-decoration: none;
-            *{
-                pointer-events: none;
-                color: black;
-            }
-            p{                
-                font-size: 1.3rem;
-            }
-            div{
-                margin-top: 0.5rem;
-            }
-            img{
-                width: 100%;
-                height: 6rem;
-                object-fit: cover;
-                border-radius: 5px;
-            }
-        }
-    }
- 
-}
 
 
 #mix-cover{    

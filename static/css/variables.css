@@ -1,10 +1,10 @@
 :root {
     /* Color Palette */
-    --primary-color: #0064D0;
-    --secondary-color: #493EFF;
+    --primary-color: #365C39;
+    --secondary-color: #aee4b2;
     --tertiary-color: #EF0000; 
     --quaternary-color: #707070;
-    --hover-color: #A49FFC;
+    --hover-color: #bfdbc1;
     --input-bg: #c1e1f1;
     --focus-color:#007bff;
     

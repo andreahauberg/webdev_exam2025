@@ -28,38 +28,7 @@ body > header {
         }
       }
     }
-    input{
-        height: var(--spacing-3xl);
-        padding: var(--spacing-lg) var(--spacing-xxxl);
-        border-radius: var(--border-radius-md);
-        background-color: var(--input-bg);
-    }
-    #search_container{
-        position: relative;
-        #search_results{
-            position: absolute; top: var(--spacing-3xl); left: 0;
-            z-index: var(--z-index-100);
-            display: flex;
-            flex-direction: column;
-            width: var(--full-scale);
-            background: var(--input-bg);
-            box-shadow: 0px var(--shadow-px-sm) var(--shadow-px-mdlg) rgba(0, 0, 0, var(--opacity-md)); 
-            .instant-item{
-                display: flex;  
-                align-items: center; 
-                padding: var(--spacing-md);  
-                *{
-                    pointer-events: none;
-                }      
-                img{
-                    width: var(--spacing-3xxl);
-                    height: var(--spacing-3xxl);
-                    margin-right: var(--spacing-xl);
-                    border-radius: var(--border-radius-full);
-                }
-            }
-        }
-    }
+   
   }
 
   a img {

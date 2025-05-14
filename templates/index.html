@@ -2,19 +2,26 @@
 
 <body>
     {% include "_header.html" %}
-    <main>
-            
-        <section id="map">
+    <main id="index_main" mix-title="{{ title | default('Company') }}">
+        <h1 class="page-title">Browse Our Shelters</h1>
+        <div id="search_container">
+            <label for="input_search" class="visually-hidden">Search items</label>
+            <input id="input_search" oninput="search()" class="" type="text" placeholder="Search">
+            <div id="search_results" class="hidden"></div>
+        </div>
+        <div id="index">
 
-        </section>
-    
-        <section id="items_more">
-            <div id="items">
-                {% for item in items: %}
-                {% include "_item_mini.html" %}
-                {% endfor %}
-            </div>
-            {% include "_button_more_items.html" %}
+            <section id="map">
+                
+            </section>
+            
+            <section id="items_more">
+                <div id="items">
+                    {% for item in items: %}
+                    {% include "_item_mini.html" %}
+                    {% endfor %}
+                </div>
+                {% include "_button_more_items.html" %}
         </section>
 
         <section id="right">
@@ -23,6 +30,7 @@
                 {% include "_item.html" %}
             </div>
         </section>
+    </div>
 
     </main>
     {% include "_footer.html" %}

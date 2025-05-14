@@ -2,8 +2,51 @@
 
 <body>
     {% include "_header.html" %}
-    <main>
-            
+    <main id="signup">
+        <form id="frmSignup" method="POST" action="{{ url_for('signup') }}">
+            <h1>Sign up</h1>
 
+            {% if message %}
+                <p class="error">{{ message }}</p>
+            {% endif %}
+            <div class="two-col">
+                <div class="field">
+                    <label for="txtFirstName">First name</label>
+                    <input id="txtFirstName" name="user_name" type="text" value="{{ old_values.get('user_name', '') }}" required autocomplete="given-name">
+                </div>
+    
+                <div class="field">
+                    <label for="txtLastName">Last name</label>
+                    <input id="txtLastName" name="user_last_name" type="text" value="{{ old_values.get('user_last_name', '') }}" required autocomplete="family-name">
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="txtEmail">Email</label>
+                <input id="txtEmail" name="user_email" type="email" value="{{ old_values.get('user_email', '') }}" required autocomplete="email">
+            </div>
+
+            <div class="field">
+                <label for="txtUsername">Username</label>
+                <input id="txtUsername" name="user_username" type="text" value="{{ old_values.get('user_username', '') }}" required autocomplete="username">
+            </div>
+
+            <div class="field">
+                <label for="txtPassword">Password</label>
+                <input id="txtPassword" name="user_password" type="password" required autocomplete="new-password">
+            </div>
+
+            <div class="field">
+                <label for="txtRepeatPassword">Repeat password</label>
+                <input id="txtRepeatPassword" name="user_repeat_password" type="password" required autocomplete="new-password">
+            </div>
+
+            <button class="btn-primary" type="submit">Sign up</button>
+
+            <p class="login-link">
+                Already have an account? <a href="{{ url_for('login') }}">Log in</a>
+            </p>
+        </form>
     </main>
     {% include "_footer.html" %}
+</body>
