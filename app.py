@@ -708,103 +708,83 @@ def show_edit_item(item_pk):
 
 
 
-@app.post("/items/<item_pk>/edit")
-def edit_item(item_pk):
+@app.post("/update-item/<item_pk>")
+def update_item_inline(item_pk):
     try:
-        item_name = request.form.get("item_name")
-        item_price = request.form.get("item_price")
-
-        # Optionally validate input here or via x.validate...
-        if not item_name or not item_price:
-            return "Missing required fields", 400
+        item_name = x.validate_item_name()
+        item_address = x.validate_item_address()
+        item_lat = x.validate_item_lat()
+        item_lon = x.validate_item_lon()
+        item_price = x.validate_item_price()
+        item_updated_at = int(time.time())
 
         db, cursor = x.db()
-        q = """
-            UPDATE items 
-            SET item_name = %s, item_price = %s, item_updated_at = %s
-            WHERE item_pk = %s
-        """
+        q = """UPDATE items 
+               SET item_name = %s, item_address = %s, item_lat = %s, item_lon = %s, item_price = %s, item_updated_at = %s 
+               WHERE item_pk = %s"""
         cursor.execute(q, (
-            item_name,  
-            item_price, 
-            int(time.time()), 
-            item_pk
+            item_name, item_address, item_lat, item_lon, item_price, item_updated_at, item_pk
         ))
 
         if cursor.rowcount != 1:
-            return "Item not updated", 400
+            raise Exception("Update failed")
 
         db.commit()
-        return redirect(url_for("show_profile"))  # or another route
+        return redirect(url_for("show_profile"))
+
     except Exception as ex:
         ic(ex)
         if "db" in locals(): db.rollback()
-        return "Error updating item", 500
+        return redirect(url_for("show_profile", error_message=str(ex)))
+
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
-@app.post("/items/<item_pk>/edit")
-def edit_shelter(item_pk):
-    if "user" not in session:
-        return redirect(url_for("show_login"))
 
+
+
+@app.post("/update-profile/<user_pk>")
+def update_profile(user_pk):
     try:
+        # if "user_pk" not in session:
+        #     return redirect(url_for("show_login"))
+
+        # user_pk = session["user_pk"]
+
+        user_name = x.validate_user_name()
+        user_last_name = x.validate_user_last_name()
+        user_username = x.validate_user_username()
+        user_email = x.validate_user_email()
+        user_updated_at = int(time.time())
+
         db, cursor = x.db()
+        q = """UPDATE users 
+               SET user_name=%s, user_last_name=%s, user_username=%s, 
+                   user_email=%s, user_updated_at=%s
+               WHERE user_pk=%s"""
+        cursor.execute(q, (
+            user_name, user_last_name, user_username, user_email,
+            user_updated_at, user_pk
+        ))
 
-        # Validate inputs, you can reuse your x.validate_xxx() or do manual checks
-        item_name = request.form.get("item_name", "").strip()
-        item_address = request.form.get("item_address", "").strip()
-        item_lat = request.form.get("item_lat", "").strip()
-        item_lon = request.form.get("item_lon", "").strip()
-        item_price = request.form.get("item_price", "").strip()
-
-        # Optional: Validate input lengths or regex here, or trust front-end validation
-
-        # Update the item info in DB, but only if this item belongs to the user
-        user_pk = session["user"]["user_pk"]
-
-        # Check ownership first
-        q_check = "SELECT * FROM items WHERE item_pk = %s AND user_pk = %s"
-        cursor.execute(q_check, (item_pk, user_pk))
-        item = cursor.fetchone()
-        if not item:
-            return "Unauthorized or item not found", 403
-
-        # Update items table
-        q_update = """
-            UPDATE items
-            SET item_name=%s, item_address=%s, item_lat=%s, item_lon=%s, item_price=%s, item_updated_at=%s
-            WHERE item_pk=%s
-        """
-        now = int(time.time())
-        cursor.execute(q_update, (item_name, item_address, item_lat, item_lon, item_price, now, item_pk))
-
-        # Handle image uploads (optional) if any files uploaded
-        if 'images' in request.files:
-            files = request.files.getlist('images')
-            for file in files:
-                if file and file.filename != '':
-                    filename = secure_filename(file.filename)
-                    filepath = os.path.join("uploads", filename)
-                    file.save(filepath)
-
-                    # Insert image record
-                    q_img = "INSERT INTO images (item_pk, image_name) VALUES (%s, %s)"
-                    cursor.execute(q_img, (item_pk, filename))
+        if cursor.rowcount != 1:
+            raise Exception("Nothing was updated")
 
         db.commit()
 
+        q = "SELECT * FROM users WHERE user_pk = %s"
+        cursor.execute(q, (user_pk,))
+        updated_user = cursor.fetchone()
+        if updated_user:
+            updated_user.pop("user_password", None)  # remove sensitive data
+            session["user"] = updated_user
+
         return redirect(url_for("show_profile"))
+
     except Exception as ex:
         ic(ex)
-        if "db" in locals():
-            db.rollback()
-        return redirect(url_for("show_profile", error_message="Failed to update shelter"))
+        if "db" in locals(): db.rollback()
+        return redirect(url_for("show_profile", error_message=str(ex)))
     finally:
-        if "cursor" in locals():
-            cursor.close()
-        if "db" in locals():
-            db.close()
-
-
-
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
