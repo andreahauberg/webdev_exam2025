@@ -179,7 +179,7 @@ body {
     left: 0;
     width: 100%;
     background: var(--input-bg);
-    z-index: var(--z-index-1000);
+    z-index: var(--z-index-1001);
     flex-direction: column;
     box-shadow: 0px var(--shadow-px-sm) var(--shadow-px-mdlg) rgba(0, 0, 0, var(--opacity-md));
     border-radius: var(--border-radius-md);

@@ -67,9 +67,16 @@
       {% for img_filename in images_by_item.get(item.item_pk, []) %}
         <img src="{{ url_for('static', filename='uploads/' + img_filename) }}" alt="Item image" style="max-width: 150px;"/>
       {% endfor %}
+      <p>Price: {{ item.item_price }}</p>
     </div>
+    
+    <!-- Edit Button -->
+    <form action="/items/{{ item.item_pk }}/edit" method="GET" style="margin-top: 10px;">
+      <button class="btn-secondary" type="submit">Edit</button>
+    </form>
   </div>
 {% endfor %}
+
 
 
 </main>

@@ -86,9 +86,33 @@ def show_index():
 def show_profile():
     error_message = request.args.get("error_message", "")
     try:
+        db, cursor = x.db()
+
+        # Fetch all items for the user (or all items)
+        q_items = "SELECT * FROM items ORDER BY item_created_at DESC"
+        cursor.execute(q_items)
+        items = cursor.fetchall()
+
+        # Fetch images for all those items
+        item_pks = [item['item_pk'] for item in items]
+        if item_pks:
+            format_strings = ','.join(['%s'] * len(item_pks))
+            q_images = f"SELECT item_pk, image_name FROM images WHERE item_pk IN ({format_strings})"
+            cursor.execute(q_images, tuple(item_pks))
+            images = cursor.fetchall()
+        else:
+            images = []
+
+        # Group images by item_pk
+        images_by_item = {}
+        for img in images:
+            images_by_item.setdefault(img['item_pk'], []).append(img['image_name'])
+
         is_session = False
-        if session["user"]: is_session = True
+        if session.get("user"):
+            is_session = True
         active_profile = "active"
+
         return render_template("profile.html", 
                                title="Profile",
                                user=session["user"], 
@@ -96,10 +120,19 @@ def show_profile():
                                is_session=is_session,
                                active_profile=active_profile, 
                                error_message=error_message,
-                               old_values={})
+                               old_values={},
+                               items=items,
+                               images_by_item=images_by_item)
+
     except Exception as ex:
         ic(ex)
         return redirect(url_for("show_login"))
+    finally:
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
+
 
 
 ##############################
@@ -654,3 +687,124 @@ def unblock_item(item_pk):
         return str(ex)
     finally:
        pass
+
+@app.get("/items/<item_pk>/edit")
+def show_edit_item(item_pk):
+    try:
+        db, cursor = x.db()
+        q = "SELECT * FROM items WHERE item_pk = %s"
+        cursor.execute(q, (item_pk,))
+        item = cursor.fetchone()
+        if not item:
+            return "Item not found", 404
+
+        return render_template("edit_item.html", item=item, title="Edit Item")
+    except Exception as ex:
+        ic(ex)
+        return "Error loading item", 500
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+
+@app.post("/items/<item_pk>/edit")
+def edit_item(item_pk):
+    try:
+        item_name = request.form.get("item_name")
+        item_price = request.form.get("item_price")
+
+        # Optionally validate input here or via x.validate...
+        if not item_name or not item_price:
+            return "Missing required fields", 400
+
+        db, cursor = x.db()
+        q = """
+            UPDATE items 
+            SET item_name = %s, item_price = %s, item_updated_at = %s
+            WHERE item_pk = %s
+        """
+        cursor.execute(q, (
+            item_name,  
+            item_price, 
+            int(time.time()), 
+            item_pk
+        ))
+
+        if cursor.rowcount != 1:
+            return "Item not updated", 400
+
+        db.commit()
+        return redirect(url_for("show_profile"))  # or another route
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        return "Error updating item", 500
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+@app.post("/items/<item_pk>/edit")
+def edit_shelter(item_pk):
+    if "user" not in session:
+        return redirect(url_for("show_login"))
+
+    try:
+        db, cursor = x.db()
+
+        # Validate inputs, you can reuse your x.validate_xxx() or do manual checks
+        item_name = request.form.get("item_name", "").strip()
+        item_address = request.form.get("item_address", "").strip()
+        item_lat = request.form.get("item_lat", "").strip()
+        item_lon = request.form.get("item_lon", "").strip()
+        item_price = request.form.get("item_price", "").strip()
+
+        # Optional: Validate input lengths or regex here, or trust front-end validation
+
+        # Update the item info in DB, but only if this item belongs to the user
+        user_pk = session["user"]["user_pk"]
+
+        # Check ownership first
+        q_check = "SELECT * FROM items WHERE item_pk = %s AND user_pk = %s"
+        cursor.execute(q_check, (item_pk, user_pk))
+        item = cursor.fetchone()
+        if not item:
+            return "Unauthorized or item not found", 403
+
+        # Update items table
+        q_update = """
+            UPDATE items
+            SET item_name=%s, item_address=%s, item_lat=%s, item_lon=%s, item_price=%s, item_updated_at=%s
+            WHERE item_pk=%s
+        """
+        now = int(time.time())
+        cursor.execute(q_update, (item_name, item_address, item_lat, item_lon, item_price, now, item_pk))
+
+        # Handle image uploads (optional) if any files uploaded
+        if 'images' in request.files:
+            files = request.files.getlist('images')
+            for file in files:
+                if file and file.filename != '':
+                    filename = secure_filename(file.filename)
+                    filepath = os.path.join("uploads", filename)
+                    file.save(filepath)
+
+                    # Insert image record
+                    q_img = "INSERT INTO images (item_pk, image_name) VALUES (%s, %s)"
+                    cursor.execute(q_img, (item_pk, filename))
+
+        db.commit()
+
+        return redirect(url_for("show_profile"))
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals():
+            db.rollback()
+        return redirect(url_for("show_profile", error_message="Failed to update shelter"))
+    finally:
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
+
+
+
