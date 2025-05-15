@@ -84,14 +84,19 @@ def show_index():
 ##############################
 @app.get("/profile")
 def show_profile():
-    active_profile ="active"
     error_message = request.args.get("error_message", "")
     try:
         is_session = False
         if session["user"]: is_session = True
-        return render_template("profile.html", title="Profile", user=session["user"], x=x, is_session=is_session, active_profile=active_profile, 
-                           error_message=error_message,
-                           old_values={})
+        active_profile = "active"
+        return render_template("profile.html", 
+                               title="Profile",
+                               user=session["user"], 
+                               x=x, 
+                               is_session=is_session,
+                               active_profile=active_profile, 
+                               error_message=error_message,
+                               old_values={})
     except Exception as ex:
         ic(ex)
         return redirect(url_for("show_login"))
@@ -409,9 +414,6 @@ def search():
 
 
 #################################
-
-app.config['UPLOAD_FOLDER'] = 'static/uploads/'
-
 @app.post("/add-item")
 def add_item():
     try:
@@ -420,67 +422,86 @@ def add_item():
         item_address = x.validate_item_address()
         item_lat = x.validate_item_lat()
         item_lon = x.validate_item_lon()
-        item_image = x.validate_item_image()
         item_created_at = int(time.time())
         item_price = x.validate_item_price()
-        
-        image_filename = None
-        if item_image:
-            image_filename = secure_filename(item_image.filename)
-            upload_dir = os.path.join("static", "uploads")
-            os.makedirs(upload_dir, exist_ok=True)
-            item_image.save(os.path.join(upload_dir, image_filename))
-        
+
+        # Billedhåndtering
+        uploaded_files = request.files.getlist("images")
+        if not uploaded_files:
+            raise Exception("No images uploaded")
+
+        image_values = ""
+        timestamp = int(time.time())
+        first_image_filename = None
+
+        for idx, file in enumerate(uploaded_files):
+            if file.filename == "":
+                continue
+            filename = secure_filename(file.filename)
+            filepath = os.path.join("static/uploads", filename)
+            file.save(filepath)
+
+            image_pk = uuid.uuid4().hex
+            image_values += f"('{image_pk}', '{item_pk}', '{filename}', {timestamp}),"
+
+            if idx == 0:
+                first_image_filename = filename  # sæt første billede som hovedbillede
+
         db, cursor = x.db()
-        q = """INSERT INTO items
-               (item_pk, item_name, item_address, item_lat, item_lon, item_image, item_created_at, item_price)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
-        cursor.execute(q, (
-            item_pk, 
-            item_name, 
-            item_address, 
-            item_lat, 
-            item_lon, 
-            image_filename,
+
+        # Indsæt item med hovedbillede
+        q_item = """INSERT INTO items
+                    (item_pk, item_name, item_address, item_lat, item_lon, item_image, item_created_at, item_price)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
+        cursor.execute(q_item, (
+            item_pk,
+            item_name,
+            item_address,
+            item_lat,
+            item_lon,
+            first_image_filename,
             item_created_at,
             item_price
-            ))
+        ))
         if cursor.rowcount != 1:
             raise Exception("Could not insert item")
 
-        db.commit()
+        # Indsæt billeder
+        if image_values:
+            image_values = image_values.rstrip(",")
+            q_images = f"INSERT INTO images (image_pk, item_pk, image_name, created_at) VALUES {image_values}"
+            cursor.execute(q_images)
 
+        db.commit()
         return redirect(url_for("show_index"))
+
     except Exception as ex:
         ic(ex)
         if "db" in locals(): db.rollback()
         old_values = request.form.to_dict()
-        
+
+        # fejlbeskeder
         if "Shelter name" in str(ex):
             old_values.pop("item_name", None)
             return render_template("add-item.html", error_message="input_error")
-        
         if "Address" in str(ex):
             old_values.pop("item_address", None)
             return render_template("add-item.html", error_message="input_error")
-        
         if "latitude" in str(ex):
             old_values.pop("item_lat", None)
             return render_template("add-item.html", error_message="input_error")
-        
-        if "latitude" in str(ex):
+        if "longitude" in str(ex):
             old_values.pop("item_longitude", None)
             return render_template("add-item.html", error_message="input_error")
-        
         if "price" in str(ex):
             old_values.pop("item_price", None)
             return render_template("add-item.html", error_message="input_error")
-        
+
         return redirect(url_for("show_profile", error_message=str(ex)))
+
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
-
 
 
 

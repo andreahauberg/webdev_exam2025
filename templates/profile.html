@@ -4,14 +4,9 @@
     {% include "_header.html" %}
 <main
   id="profile"
-  class="page"
-  mix-url="/profile"
-  mix-top="body"
-  mix-title="{{ title | default('Profile') }}"
-  mix-hide=".page"
-  mix-show="#profile">
+  mix-title="{{ title | default('Profile') }}">
   
-  <form mix-post="/add-item">
+  <form action="/add-item" method="POST" enctype="multipart/form-data">
     <p>Hi {{ user.user_name }} {{ user.user_last_name }}</p>
     <h2>{{ error_message }}</h2>
   <div class="form-group">
@@ -59,11 +54,23 @@
 
   <div class="form-group">
     <label for="item_image">Upload Image:</label>
-    <input id="item_image" name="item_image" type="file" accept="image/*" />
+    <input id="item_image" type="file" name="images" multiple accept="image/*" />
   </div>
 
-  <button class="btn-primary" mix-await="Please wait..." mix-default="Add Item">Add Item</button>
+  <button class="btn-primary" type="submit" >Add Item</button>
 </form>
+{% for item in items %}
+  <div class="item">
+    <h3>{{ item.item_name }}</h3>
+    <p>{{ item.item_address }}</p>
+    <div class="images">
+      {% for img_filename in images_by_item.get(item.item_pk, []) %}
+        <img src="{{ url_for('static', filename='uploads/' + img_filename) }}" alt="Item image" style="max-width: 150px;"/>
+      {% endfor %}
+    </div>
+  </div>
+{% endfor %}
+
 
 </main>
     {% include "_footer.html" %}

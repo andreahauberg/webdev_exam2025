@@ -131,16 +131,36 @@ def validate_item_price():
 
 
 ##############################
-IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp")
-def validate_item_image():
-    error = "Invalid image format"
-    item_image = request.files.get("item_image")
-    if not item_image or item_image.filename == "":  # Sikrer, at filen faktisk eksisterer
-        raise Exception("No image uploaded")
-    if not item_image.filename.lower().endswith(IMAGE_EXTENSIONS):
-        raise Exception(error)
-    return item_image
+ALLOWED_EXSTENSIONS = ["png", "jpg", "jpeg", "gif"]
+MAX_FILE_SIZE = 1 * 1024 * 1024 #1MB size in bytes
+MAX_IMAGE_UPLOAD = 5
 
+def validate_item_images():
+    images_names = []
+    files = request.files.getlist("files") 
+
+    if not files or all(not f.filename for f in files):
+        raise Exception("company_ex no files uploaded")
+
+    if len(files) > MAX_IMAGE_UPLOAD:
+        raise Exception("company_ex max upload exceded")
+
+    for the_file in files:
+        file_size = len(the_file.read()) #size in bytes
+        file_name, file_extension = os.path.splitext(the_file.filename) #Splits filename into name + extension.
+        the_file.seek(0) #resets the file pointer so the file can be saved later.
+        file_extension = file_extension.lstrip(".") #Removes the leading dot (.jpg → jpg). Converts it to lowercase for consistency.
+        if file_extension not in ALLOWED_EXSTENSIONS:
+            raise Exception("company_ex file extension not allowed")
+        if file_size > MAX_FILE_SIZE:
+            raise Exception("company_ex file too large")
+        new_file_name = f"{uuid.uuid4().hex}.{file_extension}" #Generates a unique string for each file.
+        images_names.append(new_file_name)
+        file_path = os.path.join("static/uploads", new_file_name) #Creates the full file path.
+        the_file.save(file_path) #Saves the file in the "uploads" directory.
+
+
+    return images_names 
 
 
 

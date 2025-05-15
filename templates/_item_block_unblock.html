@@ -1,5 +1,5 @@
 <article class="item">
-    <img src="{{ url_for('static', filename='images/'+ item.item_image) }}">
+    <img src="{{ url_for('static', filename='uploads/'+ item.item_image) }}">
     <p>
         {{ item.item_name }}
     </p>
@@ -10,3 +10,5 @@
         {{ "{:,.0f}".format(item.item_price * rates.rates.DKK) }} DKK
     </div>
 </article>
+
+
