@@ -55,6 +55,16 @@ def send_email():
         ic(ex)
         return "error"
 
+###############################
+@app.get("/send_reset_email")
+def send_reset_email():
+    try:
+        x.send_reset_email()
+        return "email"
+    except Exception as ex:
+        ic(ex)
+        return "error"
+
 
 ##############################
 @app.get("/")
@@ -293,6 +303,7 @@ def login():
         ic(user)
         if not user: raise Exception("User not found")
         if user["user_verified_at"] == 0: raise Exception("User not verified")
+        if user["user_deleted_at"] != 0: raise Exception("User not Found")
         if not check_password_hash(user["user_password"], user_password):
             raise Exception("Invalid credentials")
         user.pop("user_password")
@@ -328,6 +339,45 @@ def logout():
     session.pop("user")
     return redirect(url_for("show_login"))
 
+
+##############################
+@app.get("/forgot-password")
+def show_forgot_password():
+    try:
+        return render_template("forgot_password.html", title="Shelter Forgot Password")
+    except Exception as ex:
+        ic(ex)
+        return "Error loading page", 500
+    
+
+
+##############################
+@app.post("/forgot-password")
+def forgot_password():
+    try:
+        user_email = x.validate_user_email()
+        db, cursor = x.db()
+        q = "SELECT * FROM users WHERE user_email = %s"
+        cursor.execute(q, (user_email,))
+        user = cursor.fetchone()
+        if not user: raise Exception("User not found")
+        if user["user_verified_at"] == 0: raise Exception("User not verified")
+        if user["user_deleted_at"] != 0: raise Exception("User not Found")
+        verification_key = str(uuid.uuid4())
+        q_update = """UPDATE users
+                      SET user_verification_key = %s
+                      WHERE user_pk = %s"""
+        cursor.execute(q_update, (verification_key, user["user_pk"]))
+        db.commit()
+        x.send_reset_email(user["user_name"], user["user_email"], verification_key)
+        return redirect(url_for("show_login", message="Email sent"))
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        return redirect(url_for("show_login", message=ex.args[0]))
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
 
 ##############################
 @app.get("/items/<item_pk>")
@@ -785,6 +835,90 @@ def update_profile(user_pk):
         ic(ex)
         if "db" in locals(): db.rollback()
         return redirect(url_for("show_profile", error_message=str(ex)))
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+###############################
+@app.delete("/user")
+def delete_user():
+    try:
+        user_pk = session.get("user")["user_pk"]   
+        db, cursor = x.db()
+        q = "UPDATE users SET user_deleted_at = %s WHERE user_pk = %s"
+        deleted_at = int(time.time())
+        cursor.execute(q, (deleted_at, user_pk))
+        if cursor.rowcount != 1: raise Exception ("company_ex cannot delete user ")
+        db.commit()
+        session.pop("user")
+        return """
+                <mixhtml mix-redirect="/login">
+                </mixhtml>
+            """
+    except Exception as ex:
+        db.rollback()
+        session.pop("user")
+        if "company_ex cannot delete user " in str(ex):
+            return """
+                <mixhtml mix-redirect="/login">
+                </mixhtml>
+            """
+        # worst case, we cannot control exceptions
+        return """
+            <mixhtml mix-top="body">
+                ups
+            </mixhtml>
+        """
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+
+
+##############################
+@app.get("/reset-password/<verification_key>")
+def show_reset_password(verification_key):
+    try:
+        return render_template("reset_password.html", verification_key=verification_key)
+    except Exception as ex:
+        ic(ex)
+        return "Error loading reset form", 500
+
+
+###############################
+@app.post("/reset-password/<verification_key>")
+def reset_password(verification_key):
+    try:
+        new_password = x.validate_user_password()  # Ensure you reuse or add password validation
+        hashed_password = generate_password_hash(new_password)
+
+        db, cursor = x.db()
+
+        # Make sure the key is valid and not used
+        q = "SELECT user_pk FROM users WHERE user_verification_key = %s AND user_verified_at != 0"
+        cursor.execute(q, (verification_key,))
+        user = cursor.fetchone()
+        if not user:
+            raise Exception("Invalid or expired reset link")
+
+        # Update the password and invalidate the key
+        q_update = """
+        UPDATE users
+        SET user_password = %s,
+            user_verification_key = NULL,
+            user_updated_at = %s
+        WHERE user_pk = %s
+        """
+        cursor.execute(q_update, (hashed_password, int(time.time()), user["user_pk"]))
+        db.commit()
+
+        return redirect(url_for("show_login", message="Password updated. You can now log in."))
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        return "Password reset failed", 500
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()

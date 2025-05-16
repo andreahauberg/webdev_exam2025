@@ -194,7 +194,7 @@ def validate_item_images():
 
 
 ##############################
-def send_email(user_name, user_last_name, verification_key):
+def send_email(user_name, user_last_name, user_email, verification_key):
     try:
         # Create a gmail
         # Enable (turn on) 2 step verification/factor in the google account manager
@@ -205,12 +205,12 @@ def send_email(user_name, user_last_name, verification_key):
         password = "ffna legf lmja vzdv"  # If 2FA is on, use an App Password instead
 
         # Receiver email address
-        receiver_email = "andrea.hauberg1@gmail.com"
+        receiver_email = user_email
         
         # Create the email message
         message = MIMEMultipart()
-        message["From"] = "My company name"
-        message["To"] = "andrea.hauberg1@gmail.com"
+        message["From"] = "Shelter Service Message" 
+        message["To"] = receiver_email
         message["Subject"] = "Welcome"
 
         # Body of the email
@@ -234,3 +234,38 @@ def send_email(user_name, user_last_name, verification_key):
         pass
 
 
+
+
+##############################
+def send_reset_email(user_name, user_email, verification_key):
+    try:
+        sender_email = "andrea.hauberg1@gmail.com"
+        password = "ffna legf lmja vzdv"  # Use app password from Gmail
+
+        receiver_email = user_email
+
+        message = MIMEMultipart()
+        message["From"] = "Shelter Service Message"
+        message["To"] = receiver_email
+        message["Subject"] = "Reset Your Password"
+
+        reset_link = f"http://127.0.0.1/reset-password/{verification_key}"
+        body = f"""
+        <p>Hello {user_name},</p>
+        <p>We received a request to reset your password.</p>
+        <p>Please <a href="{reset_link}">click here to reset your password</a>.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+        """
+        message.attach(MIMEText(body, "html"))
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(sender_email, password)
+            server.sendmail(sender_email, receiver_email, message.as_string())
+
+        ic("Reset email sent successfully!")
+        return "reset email sent"
+
+    except Exception as ex:
+        ic(ex)
+        raise Exception("cannot send reset email")
