@@ -62,12 +62,12 @@ window.add_markers_to_map = function (data) {
 
     data.forEach((item) => {
       var customIcon = L.divIcon({
-        className: "custom-marker", // Class for custom styling
+        className: "custom-marker",
         html: `<div class="custom-marker">
-                  <img src="/static/icons/${item.item_icon}" />
-               </div>`, // Custom content inside the div
-        iconSize: [32, 32], // size of the icon
-        iconAnchor: [16, 16], // point of the icon which will correspond to marker's location
+                 <img mix-get="/items/${item.item_pk}" src="/static/icons/${item.item_icon}" />
+               </div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
         popupAnchor: [0, -16],
       });
 
@@ -75,13 +75,13 @@ window.add_markers_to_map = function (data) {
         .addTo(map)
         .bindPopup(item.item_name);
     });
+
+    // Re-run mix_convert to activate new mix-get handlers
+    mix_convert();
   } catch (err) {
     console.error("Failed to add markers:", err, data);
   }
 };
 
-function onMarkerClick(event) {
-  alert("Marker clicked at " + event.latlng);
-}
 
 // ###############################################
