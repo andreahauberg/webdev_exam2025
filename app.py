@@ -388,31 +388,15 @@ def get_item_by_pk(item_pk):
         cursor.execute(q, (item_pk,))
         item = cursor.fetchone()
 
-        rates= ""
         with open("rates.txt", "r") as file:
-            rates = file.read() # this is text that looks like json
-            rates = json.loads(rates)
+            rates = json.load(file)
 
-        html_item = render_template("_item.html", item=item, rates=rates)
-        return f"""
-            <mixhtml mix-replace="#item">
-                {html_item}
-            </mixhtml>
-        """
+        return render_template("item_single_view.html", item=item, rates=rates)
+
     except Exception as ex:
         ic(ex)
-        if "company_ex page number" in str(ex):
-            return """
-                <mixhtml mix-top="body">
-                    page number invalid
-                </mixhtml>
-            """
-        # worst case, we cannot control exceptions
-        return """
-            <mixhtml mix-top="body">
-                ups
-            </mixhtml>
-        """
+        return "An error occurred while fetching the item.", 500
+
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()

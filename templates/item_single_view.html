@@ -1,0 +1,24 @@
+{% include "_head.html" %}
+{% include "_header.html" %}
+<main id="item-single-view">
+    <div class="single-item-card">
+        <img src="{{ url_for('static', filename='uploads/' + item.item_image) }}" alt="{{ item.item_name }}" class="single-item-image">
+
+        <h1>{{ item.item_name }}</h1>
+
+        <p class="price-usd">
+            {{ "{:,}".format(item.item_price) }} USD
+        </p>
+
+        <p class="price-dkk">
+            {{ "{:,.0f}".format(item.item_price * rates.rates.DKK) }} DKK
+        </p>
+
+        <p class="address">
+            {{ item.item_address }}
+        </p>
+
+        <a href="/" class="btn-secondary">Back</a>
+    </div>
+</main>
+{% include "_footer.html" %}

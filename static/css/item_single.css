@@ -1,0 +1,30 @@
+#item-single-view {
+    max-width: 600px;
+    margin: 2em auto;
+    padding: 1em;
+}
+
+.single-item-card {
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1.5em;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    text-align: center;
+}
+
+.single-item-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+.price-usd, .price-dkk {
+    font-size: 1.2em;
+    margin: 0.5em 0;
+}
+
+.address {
+    color: #666;
+    margin-top: 1em;
+}

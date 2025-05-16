@@ -6,6 +6,7 @@
 @import "form.css";
 @import "admin.css";
 @import "profile.css";
+@import "item_single.css";
 
 *{
     margin: 0; padding: 0; box-sizing: border-box;
