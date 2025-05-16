@@ -391,7 +391,13 @@ def get_item_by_pk(item_pk):
         with open("rates.txt", "r") as file:
             rates = json.load(file)
 
-        return render_template("item_single_view.html", item=item, rates=rates)
+        html = render_template("_item.html", item=item, rates=rates)
+
+        return f"""
+            <mixhtml mix-replace="#item">
+                {html}
+            </mixhtml>
+        """
 
     except Exception as ex:
         ic(ex)
@@ -400,6 +406,7 @@ def get_item_by_pk(item_pk):
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
 
 
 
@@ -722,6 +729,7 @@ def unblock_item(item_pk):
     finally:
        pass
 
+##############################
 @app.get("/items/<item_pk>/edit")
 def show_edit_item(item_pk):
     try:
@@ -776,7 +784,7 @@ def update_item_inline(item_pk):
         if "db" in locals(): db.close()
 
 
-
+###############################
 @app.post("/update-profile/<user_pk>")
 def update_profile(user_pk):
     try:
