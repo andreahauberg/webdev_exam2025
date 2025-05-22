@@ -52,12 +52,12 @@ form{
     pointer-events: none;
     z-index: 10;
 }
-.toast{
+/* .toast{
     margin: auto;
     padding: 1rem 3rem;
     color: white;
 
-}
+} */
 .ok{
     background: green;
 }
@@ -102,4 +102,33 @@ form{
     100% {
         opacity: 0;
     }
+}
+
+
+.toast-container {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    pointer-events: none;
+}
+.toast {
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    animation: fadeOut 4s ease-in forwards;
+}
+.toast-success {
+    background-color: #4BB543;
+}
+.toast-error {
+    background-color: #D8000C;
+}
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-20px); }
 }

@@ -1,0 +1,23 @@
+<nav class="language-nav">
+  <a href="{{ url_for('set_language', lan='en') }}">English</a>
+  <a href="{{ url_for('set_language', lan='dk') }}">Dansk</a>
+</nav>
+
+<style>
+.language-nav {
+  text-align: right;
+  margin-right: 1em;
+  padding: 0.5em 0;
+}
+
+.language-nav a {
+  margin-left: 1em;
+  text-decoration: none;
+  color: #007bff;
+  font-weight: 500;
+}
+
+.language-nav a:hover {
+  text-decoration: underline;
+}
+</style>

@@ -3,48 +3,53 @@
 <body>
     {% include "_header.html" %}
     <main id="signup">
-        <form id="frmSignup" method="POST" action="{{ url_for('signup') }}">
-            <h1>Sign up</h1>
+        {% include "_language_nav.html" %}
+        <form id="frmSignup" action="/{{ lan }}/signup" method="post">
+            <h1>{{ languages.signup_title }}</h1>
+            <div id="toast-container" class="toast-container">
+                {% if message %}
+                <div class="toast toast-{{ message_type }}">
+                    {{ message }}
+                </div>
+                {% endif %}
+            </div>
 
-            {% if message %}
-                <p class="error">{{ message }}</p>
-            {% endif %}
             <div class="two-col">
                 <div class="field">
-                    <label for="txtFirstName">First name</label>
-                    <input id="txtFirstName" name="user_name" type="text" value="{{ old_values.get('user_name', '') }}" required autocomplete="given-name">
+                    <label for="txtFirstName">{{ languages.signup_first_name }}</label>
+                    <input id="txtFirstName" name="user_name" type="text" value="{{ old_values.get('user_name', '') }}"
+                        required autocomplete="given-name">
                 </div>
-    
+
                 <div class="field">
-                    <label for="txtLastName">Last name</label>
-                    <input id="txtLastName" name="user_last_name" type="text" value="{{ old_values.get('user_last_name', '') }}" required autocomplete="family-name">
+                    <label for="txtLastName">{{ languages.signup_last_name }}</label>
+                    <input id="txtLastName" name="user_last_name" type="text"
+                        value="{{ old_values.get('user_last_name', '') }}" required autocomplete="family-name">
                 </div>
             </div>
 
             <div class="field">
-                <label for="txtEmail">Email</label>
-                <input id="txtEmail" name="user_email" type="email" value="{{ old_values.get('user_email', '') }}" required autocomplete="email">
+                <label for="txtEmail">{{ languages.signup_email }}</label>
+                <input id="txtEmail" name="user_email" value="{{ old_values.get('user_email', '') }}"
+                    required autocomplete="email">
             </div>
 
             <div class="field">
-                <label for="txtUsername">Username</label>
-                <input id="txtUsername" name="user_username" type="text" value="{{ old_values.get('user_username', '') }}" required autocomplete="username">
+                <label for="txtUsername">{{ languages.signup_username }}</label>
+                <input id="txtUsername" name="user_username" type="text"
+                    value="{{ old_values.get('user_username', '') }}" required autocomplete="username">
             </div>
 
             <div class="field">
-                <label for="txtPassword">Password</label>
+                <label for="txtPassword">{{ languages.signup_password }}</label>
                 <input id="txtPassword" name="user_password" type="password" required autocomplete="new-password">
             </div>
 
-            <div class="field">
-                <label for="txtRepeatPassword">Repeat password</label>
-                <input id="txtRepeatPassword" name="user_repeat_password" type="password" required autocomplete="new-password">
-            </div>
-
-            <button class="btn-primary" type="submit">Sign up</button>
+            <button class="btn-primary" type="submit">{{ languages.signup_button }}</button>
 
             <p class="login-link">
-                Already have an account? <a href="{{ url_for('login') }}">Log in</a>
+                {{ languages.signup_login_text }}
+                <a href="{{ url_for('login', lan=lan) }}">{{ languages.signup_login_link }}</a>
             </p>
         </form>
     </main>

@@ -2,24 +2,38 @@
 <body>
 {% include "_header.html" %}
 <main id="item-single-view">
-    <div class="single-item-card">
-        <img src="{{ url_for('static', filename='uploads/' + item.item_image) }}" alt="{{ item.item_name }}" class="single-item-image">
+{% include "_language_nav.html" %}
+    <section>
+        <h1>{{ languages.your_chosen_shelter }}</h1>
+        <p class="error-message">{{ error_message }}</p>
+        <p class="success-message">{{ success_message }}</p>
+        <article class="single-item-card">
+            <h2 class="item-name">{{ item.item_name }}</h2>
+            
+            <img src="{{ url_for('static', filename='uploads/' + item.item_image) }}" alt="{{ item.item_name }}" class="single-item-image">
 
-        <h1>{{ item.item_name }}</h1>
+            <p class="item-description">{{ item.item_description }}</p>
 
-        <p class="price-usd">
-            {{ "{:,}".format(item.item_price) }} USD
-        </p>
+            {% if lan == "en" %}
+                <p class="price-usd">
+                    {{ "{:,}".format(item.item_price) }} USD
+                </p>
+            {% elif lan == "dk" %}
+                <p class="price-dkk">
+                    {{ "{:,.0f}".format(item.item_price * rates.rates.DKK) }} DKK
+                </p>
+            {% else %}
+                <p class="price-usd">
+                    {{ "{:,}".format(item.item_price) }} USD
+                </p>
+            {% endif %}
 
-        <p class="price-dkk">
-            {{ "{:,.0f}".format(item.item_price * rates.rates.DKK) }} DKK
-        </p>
+            <p class="address">
+                {{ item.item_address }}
+            </p>
 
-        <p class="address">
-            {{ item.item_address }}
-        </p>
-
-        <a href="/" class="btn-secondary">Back</a>
-    </div>
+            <a href="{{ url_for('show_index', lan=lan) }}" class="btn-secondary">{{ languages.back_to_home }}</a>
+        </article>
+    </section>
 </main>
 {% include "_footer.html" %}

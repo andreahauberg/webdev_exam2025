@@ -9,25 +9,36 @@ let my_timer = null;
 
 // setTimeout - runs only 1 time
 // setInterval - runs forever in intervals
+let previous_input_length = 0;
+
 function search() {
   clearInterval(my_timer);
-  if (input_search.value != "") {
+  const current_value = input_search.value;
+
+  // Only search if input is not empty AND length increased (not decreased)
+  if (current_value !== "" && current_value.length > previous_input_length) {
     my_timer = setTimeout(async function () {
       try {
-        const search_for = input_search.value;
+        const search_for = current_value;
         const conn = await fetch(`/search?q=${search_for}`);
         const data = await conn.json();
-        search_results.innerHTML = "";
-        console.log(data);
-        data.forEach((item) => {
-          const a = `<div class="instant-item" mix-get="/items/${item.item_pk}">
-                                <img src="/static/images/${item.item_image}">
-                                <a href="/${item.item_name}">${item.item_name}</a>
-                                </div>`;
-          search_results.insertAdjacentHTML("beforeend", a);
-        });
-        mix_convert();
-        search_results.classList.remove("hidden");
+
+        if (data.error) {
+          search_results.innerHTML = `<div class="search-message error">${data.error}</div>`;
+        } else {
+          search_results.innerHTML = "";
+          data.results.forEach((item) => {
+            const a = `
+              <div class="instant-item">
+                <img src="/static/uploads/${item.item_image}">
+                <a href="/${item.item_name}">${item.item_name}</a>
+              </div>
+            `;
+            search_results.insertAdjacentHTML("beforeend", a);
+          });
+          mix_convert();
+          search_results.classList.remove("hidden");
+        }
       } catch (err) {
         console.error(err);
       }
@@ -36,7 +47,10 @@ function search() {
     search_results.innerHTML = "";
     search_results.classList.add("hidden");
   }
+
+  previous_input_length = current_value.length;
 }
+
 
 addEventListener("click", function (event) {
   if (!search_results.contains(event.target)) {

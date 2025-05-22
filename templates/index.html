@@ -1,37 +1,56 @@
-{% include "_head.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""/>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+     <link rel="icon" href="{{ url_for('static', filename='icons/shelter.svg') }}" type="image/svg">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>
+        {{ title | default("Sheltr") }}
+    </title>
+    <meta name="description" content="Discover and book outdoor shelters with ease. Whether you're planning a hike, a family picnic, or a weekend getaway, Sheltr connects you to nature's best spots. Simple, fast, and reliable.">
+</head>
 <body>
     {% include "_header.html" %}
     <main id="index_main" mix-title="{{ title | default('Company') }}">
-        <h1 class="page-title">Browse Our Shelters</h1>
+        {% include "_language_nav.html" %}
+
+        <h1 class="page-title">{{ languages.browse_shelters }}</h1>
+
         <div id="search_container">
-            <label for="input_search" class="visually-hidden">Search items</label>
-            <input id="input_search" oninput="search()" class="" type="text" placeholder="Search">
+            <label for="input_search" class="visually-hidden">{{ languages.search_items_label }}</label>
+            <input id="input_search" oninput="search()" type="text" placeholder="{{ languages.search_placeholder }}">
             <div id="search_results" class="hidden"></div>
         </div>
-        <div id="index">
 
+        <div id="index">
             <section id="map">
-                
             </section>
-            
+
             <section id="items_more">
                 <div id="items">
                     {% for item in items: %}
-                    {% include "_item_mini.html" %}
+                        {% include "_item_mini.html" %}
                     {% endfor %}
                 </div>
                 {% include "_button_more_items.html" %}
-        </section>
+            </section>
 
-        <section id="right">
-            {% set item = items[0] %}
-            <div id="item">
-                {% include "_item.html" %}
-            </div>
-        </section>
-    </div>
-
+            <section id="right">
+                {% set item = items[0] %}
+                <div id="item">
+                    {% include "_item.html" %}
+                </div>
+            </section>
+        </div>
     </main>
 <footer>
     <div id="social_icons">

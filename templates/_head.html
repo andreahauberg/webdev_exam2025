@@ -3,18 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""/>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
      <link rel="icon" href="{{ url_for('static', filename='icons/shelter.svg') }}" type="image/svg">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <title>
-        {{ title | default("Company") }}
+        {{ title | default("Sheltr") }}
     </title>
+    <meta name="description" content="Discover and book outdoor shelters with ease. Whether you're planning a hike, a family picnic, or a weekend getaway, Sheltr connects you to nature's best spots. Simple, fast, and reliable.">
 </head>
 <body>

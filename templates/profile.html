@@ -2,179 +2,49 @@
 
 <body>
   {% include "_header.html" %}
-  <main id="profile" mix-title="{{ title | default('Profile') }}">
-
-  <nav class="tabs">
-    <button class="tab-btn active" data-tab="add-item">Add Item</button>
-    <button class="tab-btn" data-tab="manage-items">Manage Items</button>
-    <button class="tab-btn" data-tab="update-profile">Update Profile</button>
-  </nav>
-
-  <section id="add-item" class="tab-content active">
-    <form action="/add-item" method="POST" enctype="multipart/form-data">
-      <p>Hi {{ user.user_name }} {{ user.user_last_name }}</p>
-      <h2>{{ error_message }}</h2>
-      <div class="form-group">
-        <label for="item_name">
-          <span class="label">Shelter Name</span>
-          <span class="hint">
-            {{ x.ITEM_NAME_MIN }} to {{ x.ITEM_NAME_MAX }} characters
-          </span>
-        </label>
-        <input id="item_name" name="item_name" type="text" mix-check="{{ x.ITEM_NAME_REGEX }}"
-          value="{{ old_values.get('item_name', '') }}" />
+  {% include "_language_nav.html" %}
+  <main id="profile" mix-title="{{ languages.profile }}">
+    <div id="toast-container" class="toast-container">
+      {% if message %}
+      <div class="toast toast-{{ message_type }}">
+        {{ message }}
       </div>
-      <div class="form-group">
-        <label for="item_address">
-          <span class="label">Shelter Address</span>
-          <span class="hint">
-            {{ x.ITEM_ADDRESS_MIN }} to {{ x.ITEM_ADDRESS_MAX }} characters
-          </span>
-        </label>
-        <input id="item_address" name="item_address" type="text" mix-check="{{ x.ITEM_ADDRESS_REGEX }}"
-          value="{{ old_values.get('item_address', '') }}" />
-      </div>
-
-      <div class="form-group">
-        <label for="item_lat">Latitude:</label>
-        <input id="item_lat" name="item_lat" type="text" mix-check="{{ x.LATITUDE_REGEX }}"
-          value="{{ old_values.get('item_lat', '') }}" />
-      </div>
-
-      <div class="form-group">
-        <label for="item_lon">Longitude:</label>
-        <input id="item_lon" name="item_lon" type="text" mix-check="{{ x.LONGITUDE_REGEX }}"
-          value="{{ old_values.get('item_lon', '') }}" />
-      </div>
-      <div class="form-group">
-        <label for="item_price">Price:</label>
-        <input id="item_price" name="item_price" type="text" mix-check="{{ x.ITEM_PRICE_REGEX }}"
-          value="{{ old_values.get('item_price', '') }}" />
-      </div>
-
-      <div class="form-group">
-        <label for="item_image">Upload Image:</label>
-        <input id="item_image" type="file" name="images" multiple accept="image/*" />
-      </div>
-
-      <button class="btn-primary" type="submit">Add Item</button>
-    </form>
-  </section>
-<section id="manage-items" class="tab-content">
-    {% for item in items %}
-    <div class="item">
-      <h3>{{ item.item_name }}</h3>
-      <p>{{ item.item_address }}</p>
-      <div class="images">
-        {% for img_filename in images_by_item.get(item.item_pk, []) %}
-        <img src="{{ url_for('static', filename='uploads/' + img_filename) }}" alt="Item image"
-          style="max-width: 150px;" />
-        {% endfor %}
-      </div>
-      <p>Price: {{ item.item_price }}</p>
-
-      <button class="btn-secondary" onclick="toggleEdit('{{ item.item_pk }}')">Edit</button>
-
-<form id="edit-form-{{ item.item_pk }}" class="edit-form" action="{{ url_for('update_item_inline', item_pk=item.item_pk) }}" method="POST" style="display: none; margin-top: 1em;">
-  <div class="form-group">
-    <label>
-      <span class="label">Shelter Name</span>
-      <input type="text" name="item_name" value="{{ item.item_name }}" mix-check="{{ x.ITEM_NAME_REGEX }}">
-    </label>
-  </div>
-  <div class="form-group">
-    <label>
-      <span class="label">Shelter Address</span>
-      <input type="text" name="item_address" value="{{ item.item_address }}" mix-check="{{ x.ITEM_ADDRESS_REGEX }}">
-    </label>
-  </div>
-  <div class="form-group">
-    <label>
-      <span class="label">Latitude</span>
-      <input type="text" name="item_lat" value="{{ item.item_lat }}" mix-check="{{ x.LATITUDE_REGEX }}">
-    </label>
-  </div>
-  <div class="form-group">
-    <label>
-      <span class="label">Longitude</span>
-      <input type="text" name="item_lon" value="{{ item.item_lon }}" mix-check="{{ x.LONGITUDE_REGEX }}">
-    </label>
-  </div>
-  <div class="form-group">
-    <label>
-      <span class="label">Price</span>
-      <input type="text" name="item_price" value="{{ item.item_price }}" mix-check="{{ x.ITEM_PRICE_REGEX }}">
-    </label>
-  </div>
-  <button type="submit" class="btn-primary">Save</button>
-  <button type="button" onclick="toggleEdit('{{ item.item_pk }}')" class="btn-secondary">Cancel</button>
-</form>
-
+      {% endif %}
     </div>
-    {% endfor %}
-  </section>
 
-  <section id="update-profile" class="tab-content">
-    <h2>Update Profile Settings</h2>
-    <form id="edit-form-{{ user.user_pk }}" class="edit-form" action="{{ url_for('update_profile', user_pk=user.user_pk) }}" method="POST">
-  <div class="form-group">
-    <label>
-      <span class="label">First Name</span>
-      <input type="text" name="user_name" value="{{ user.user_name }}" mix-check="{{ x.USER_NAME_REGEX }}">
-    </label>
-  </div>
-  <div class="form-group">
-    <label>
-      <span class="label">Last Name</span>
-      <input type="text" name="user_last_name" value="{{ user.user_last_name }}" mix-check="{{ x.USER_LAST_NAME_REGEX }}">
-    </label>
-  </div>
-  <div class="form-group">
-    <label>
-      <span class="label">Username</span>
-      <input type="text" name="user_username" value="{{ user.user_username }}" mix-check="{{ x.USER_USERNAME_REGEX }}">
-    </label>
-  </div>
-  <div class="form-group">
-    <label>
-      <span class="label">Email</span>
-      <input type="email" name="user_email" value="{{ user.user_email }}" mix-check="{{ x.USER_EMAIL_REGEX }}">
-    </label>
-  </div>
-  <button type="submit" class="btn-primary">Save Changes</button>
-  <button mix-delete="/user" class="block">Delete account</button>
-</form>
-  </section>
+    <h1>{{ languages.profile }}</h1>
 
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="add-item">{{ languages.add_item }}</button>
+      <button class="tab-btn" data-tab="manage-items">{{ languages.manage_items }}</button>
+      <button class="tab-btn" data-tab="update-profile">{{ languages.update_profile }}</button>
+    </nav>
+    <section id="add-item" class="tab-content active">
+      {% include "_add_item.html" %}
+    </section>
+    <section id="manage-items" class="tab-content">
+      {% include "_manage_items.html" %}
+    </section>
+    <section id="update-profile" class="tab-content">
+      {% include "_update_profile.html" %}
+    </section>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const tabs = document.querySelectorAll(".tab-btn");
-      const contents = document.querySelectorAll(".tab-content");
-    
-      tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-          // Fjern active klasse fra alle tabs og content
-          tabs.forEach(t => t.classList.remove("active"));
-          contents.forEach(c => c.classList.remove("active"));
-    
-          // Tilføj active til valgt tab og dens content
-          tab.classList.add("active");
-          const selected = tab.getAttribute("data-tab");
-          document.getElementById(selected).classList.add("active");
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const tabs = document.querySelectorAll(".tab-btn");
+        const contents = document.querySelectorAll(".tab-content");
+
+        tabs.forEach(tab => {
+          tab.addEventListener("click", () => {
+            tabs.forEach(t => t.classList.remove("active"));
+            contents.forEach(c => c.classList.remove("active"));
+
+            tab.classList.add("active");
+            const selected = tab.getAttribute("data-tab");
+            document.getElementById(selected).classList.add("active");
+          });
         });
       });
-    });
-function toggleEdit(itemPk) {
-  const form = document.getElementById("edit-form-" + itemPk);
-  if (form.style.display === "none") {
-    form.style.display = "block";
-  } else {
-    form.style.display = "none";
-  }
-}
-
-
-</script>
+    </script>
   </main>
   {% include "_footer.html" %}

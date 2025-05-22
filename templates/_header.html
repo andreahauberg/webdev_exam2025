@@ -1,65 +1,70 @@
 <header>
-    <a href="/" title="Back to homepage">
+    <a href="{{ url_for('show_index', lan=lan) }}" title="{{ languages.back_home }}">
         <img src="{{ url_for('static', filename='icons/shelter.svg') }}" alt="Shelter Logo" class="logo">
     </a>
+
     <div id="desktop_menu">
         <nav id="main_nav">
             <ul>
-                <li><a class="{{ active_index }}" href="/" title="Homepage">Home</a></li>
+                <li><a class="{{ active_index }}" href="{{ url_for('show_index', lan=lan) }}" title="{{ languages.back_home }}">{{ languages.home }}</a></li>
             </ul>
         </nav>
+
         {% if is_session %}
         <nav id="utility_logged">
             <ul>
                 {% if session['user']['user_role'] == 'admin' %}
-                <li id="admin_desk"><a class="{{ active_admin }}" href="/admin" title="Admin">Admin</a></li>
+                <li id="admin_desk"><a class="{{ active_admin }}" href="/admin" title="{{ languages.admin }}">{{ languages.admin }}</a></li>
                 {% else %}
-                <li id="profile_desk"><a class="{{ active_profile }}" href="/profile" title="Profile">Profile</a></li>
+                <li id="profile_desk"><a class="{{ active_profile }}" href="{{ url_for('show_profile', lan=lan) }}" title="{{ languages.profile }}">{{ languages.profile }}</a></li>
                 {% endif %}
-                <li><a href="/logout" class="btnLogout">Logout</a></li>
+                <li><a href="/logout" class="btnLogout">{{ languages.logout }}</a></li>
             </ul>
         </nav>
         {% else %}
         <nav id="utility_not_logged">
             <ul>
-                <li><a class="{{ active_login }}" href="/login" title="Log in">Log in</a></li>
-                <li><a class="{{ active_signup }}" href="/signup" title="Sign up">Sign up</a></li>
+                <li><a class="{{ active_login }}" href="{{ url_for('show_login', lan=lan) }}" title="{{ languages.login }}">{{ languages.login }}</a></li>
+                <li><a class="{{ active_signup }}" href="{{ url_for('show_signup', lan=lan) }}" title="{{ languages.signup }}">{{ languages.signup }}</a></li>
+
             </ul>
         </nav>
         {% endif %}
     </div>
 
-    <button id="burger_btn" aria-label="Open menu">
+    <button id="burger_btn" aria-label="{{ languages.open_menu }}">
         <img src="{{ url_for('static', filename='icons/Menu.svg') }}" alt="Menu icon">
     </button>
 
     <div id="side_menu">
-        <button id="close_btn" aria-label="Close menu">
+        <button id="close_btn" aria-label="{{ languages.close_menu }}">
             <img src="{{ url_for('static', filename='icons/X.svg') }}" alt="Close menu icon">
         </button>
+
+        <nav id="mobile_main_nav">
+            <ul>
+                <li><a class="{{ active_index }}" href="{{ url_for('show_index', lan=lan) }}" title="{{ languages.back_home }}">{{ languages.home }}</a></li>
+            </ul>
+        </nav>
+
         {% if is_session %}
         <nav id="mobile_utility_logged">
             <ul>
-                <li id="profile_mob"><a class="{{ active_profile }}" href="/profile">Profile</a></li>
                 {% if session['user']['user_role'] == 'admin' %}
-                <li id="admin_mob"><a class="{{ active_admin }}" href="/admin">Admin</a></li>
+                <li><a class="{{ active_admin }}" href="/admin" title="{{ languages.admin }}">{{ languages.admin }}</a></li>
+                {% else %}
+                <li><a class="{{ active_profile }}" href="{{ url_for('show_profile', lan=lan) }}" title="{{ languages.profile }}">{{ languages.profile }}</a></li>
                 {% endif %}
-                <li><a href="/logout" class="btnLogout">Logout</a></li>
+                <li><a href="/logout" class="btnLogout">{{ languages.logout }}</a></li>
             </ul>
         </nav>
         {% else %}
         <nav id="mobile_utility_not_logged">
             <ul>
-                <li><a class="{{ active_login }}" href="/login">Log in</a></li>
-                <li><a class="{{ active_signup }}" href="/signup">Sign up</a></li>
+                <li><a class="{{ active_login }}" href="{{ url_for('show_login', lan=lan) }}" title="{{ languages.login }}">{{ languages.login }}</a></li>
+                <li><a class="{{ active_signup }}" href="{{ url_for('show_signup', lan=lan) }}" title="{{ languages.signup }}">{{ languages.signup }}</a></li>
             </ul>
         </nav>
         {% endif %}
-        <nav id="mobile_main_nav">
-            <ul>
-                <li><a class="{{ active_index }}" a href="/" title="Homepage">Home</a></li>
-            </ul>
-        </nav>
     </div>
-    <div id="overlay"></div>
 </header>

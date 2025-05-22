@@ -3,29 +3,38 @@
 <body>
     {% include "_header.html" %}
     <main id="login">
-<form id="frmLogin" method="POST" action="{{ url_for('login') }}">
-    <h1>Log in</h1>
+        {% include "_language_nav.html" %}
+        <div id="toast-container" class="toast-container">
+            {% if message %}
+            <div class="toast toast-{{ message_type }}">
+                {{ message }}
+            </div>
+            {% endif %}
+        </div>
 
-    {% if message %}
-        <p class="error">{{ message }}</p>
-    {% endif %}
 
-    <div class="field">
-        <label for="txtEmail">Email</label>
-        <input id="txtEmail" name="user_email" type="email" value="{{ old_values.get('user_email', '') }}" required autocomplete="email">
-    </div>
+        <form id="frmLogin" action="/{{ lan }}/login" method="post">
+            <h1>{{ languages.login_title }}</h1>
 
-    <div class="field">
-        <label for="txtPassword">Password</label>
-        <input id="txtPassword" name="user_password" type="password" required autocomplete="current-password">
-    </div>
+            <div class="field">
+                <label for="txtEmail">{{ languages.email_label }}</label>
+                <input id="txtEmail" name="user_email"  value="{{ old_values.get('user_email', '') }}"
+                    autocomplete="email">
+            </div>
 
-    <button class="btn-primary" type="submit">Log in</button>
+            <div class="field">
+                <label for="txtPassword">{{ languages.password_label }}</label>
+                <input id="txtPassword" name="user_password" type="password" autocomplete="current-password">
+            </div>
 
-    <p class="signup-link">
-        Forgot your password? <a href="{{ url_for('show_forgot_password') }}">Forgot password</a>
-    </p>
-</form>
+            <button class="btn-primary" type="submit">{{ languages.login_button }}</button>
+
+            <p class="signup-link">
+                {{ languages.forgot_password }}
+                <a href="{{ url_for('show_forgot_password', lan=lan) }}">{{ languages.forgot_password_link }}</a>
+            </p>
+
+        </form>
 
     </main>
     {% include "_footer.html" %}
