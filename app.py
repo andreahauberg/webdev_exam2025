@@ -123,7 +123,7 @@ def show_index(lan):
             session["lan"] = lan
         texts = languages.languages[lan]
         db, cursor = x.db()
-        q = "SELECT * FROM items ORDER BY item_created_at DESC LIMIT 2"
+        q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 ORDER BY item_created_at DESC LIMIT 2"
         cursor.execute(q)
         items = cursor.fetchall()
         rates = ""
@@ -165,7 +165,12 @@ def show_profile(lan):
         db, cursor = x.db()
 
         # Fetch all items (you may want to filter by user, if needed)
-        q_items = "SELECT * FROM items ORDER BY item_created_at DESC"
+        q_items = """
+                    SELECT * FROM items
+                    WHERE item_blocked_at = 0
+                    AND item_deleted_at = 0
+                    ORDER BY item_created_at DESC
+                    """
         cursor.execute(q_items)
         items = cursor.fetchall()
 
@@ -489,12 +494,15 @@ def login(lan):
         if user["user_verified_at"] == 0:
             raise Exception(texts["user_not_verified"])
         if user["user_deleted_at"] != 0:
-            raise Exception(texts["user_deleted"])
+            raise Exception(texts["user_blocked"])
+        if user["user_blocked_at"] != 0:
+            raise Exception(texts["user_blocked"])
         if not check_password_hash(user["user_password"], user_password):
             raise Exception(texts["invalid_password"])
 
         user.pop("user_password")
         session["user"] = user
+        session["user_pk"] = user["user_pk"]
         session["message"] = texts["login_success"]
         session["message_type"] = "success"
 
@@ -633,7 +641,7 @@ def get_item_by_pk(item_pk, lan):
         texts = languages.languages[lan]
 
         db, cursor = x.db()
-        q = "SELECT * FROM items WHERE item_pk = %s"
+        q = "SELECT * FROM items WHERE item_pk = %s AND item_blocked_at = 0 AND item_deleted_at = 0"
         cursor.execute(q, (item_pk,))
         item = cursor.fetchone()
 
@@ -672,7 +680,7 @@ def get_items_by_page(page_number):
         offset = (page_number-1) * items_per_page
         extra_item = items_per_page + 1
         db, cursor = x.db()
-        q = "SELECT * FROM items ORDER BY item_created_at DESC LIMIT %s OFFSET %s"
+        q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 ORDER BY item_created_at DESC LIMIT %s OFFSET %s"
         cursor.execute(q, (extra_item, offset))
         items = cursor.fetchall()
         html = ""
@@ -732,7 +740,7 @@ def search():
         search_for = x.validate_search_for(texts)
         db, cursor = x.db()
 
-        q = "SELECT * FROM items WHERE item_name LIKE %s"
+        q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 AND item_name LIKE %s"
         cursor.execute(q, (f"{search_for}%",))
         items = cursor.fetchall()
 
@@ -757,10 +765,18 @@ def search():
 @app.post("/<lan>/add-item")
 def add_item(lan):
     try:
-        lan = session.get("lan", "en")
         if lan not in ["en", "dk"]:
-            lan = "en"
+            lan = session.get("lan", "en")
+            if lan not in ["en", "dk"]:
+                lan = "en"
+        session["lan"] = lan
+
         texts = languages.languages[lan]
+
+        user = session.get("user")
+        if not user or "user_pk" not in user:
+            raise Exception("User is not logged in")
+        user_pk = user["user_pk"]
 
         item_pk = str(uuid.uuid4())
         item_name = x.validate_item_name()
@@ -797,9 +813,11 @@ def add_item(lan):
                     item_lat, 
                     item_created_at, 
                     item_blocked_at, 
-                    item_updated_at 
+                    item_updated_at,
+                    item_deleted_at,
+                    user_fk 
                     )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
         cursor.execute(q_item, (
             item_pk, 
             item_name,
@@ -811,7 +829,9 @@ def add_item(lan):
             item_lat, 
             item_created_at,
             0,
-            None
+            None,
+            0,
+            user_pk
         ))
         if cursor.rowcount != 1:
             raise Exception(texts["could_not_insert_item"])
@@ -899,7 +919,7 @@ def show_admin(lan):
         users = cursor.fetchall()
 
         # Get items (like on index)
-        q_items = "SELECT * FROM items ORDER BY item_created_at"
+        q_items = "SELECT * FROM items WHERE item_deleted_at = 0 ORDER BY item_created_at"
         cursor.execute(q_items)
         items = cursor.fetchall()
 
@@ -1440,7 +1460,7 @@ def show_single_item(item_pk, lan):
         texts = languages.languages[lan]
 
         db, cursor = x.db()
-        q = "SELECT * FROM items WHERE item_pk = %s"
+        q = "SELECT * FROM items WHERE item_pk = %s AND item_blocked_at = 0 AND item_deleted_at = 0"
         cursor.execute(q, (item_pk,))
         item = cursor.fetchone()
 
@@ -1461,6 +1481,68 @@ def show_single_item(item_pk, lan):
         session["message"] = texts.get("item_error", "Error loading item.")
         session["message_type"] = "error"
         return redirect(url_for("show_index", lan=lan))
+
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+
+##############################
+@app.delete("/<lan>/item/<item_pk>")
+def delete_item(lan, item_pk):
+    try:
+        lan = session.get("lan", lan)
+        if lan not in ["en", "dk"]:
+            lan = "en"
+        texts = languages.languages[lan]
+
+        # Check if admin or owner, if needed – optional
+        # user = session.get("user")
+        # if not user:
+        #     raise Exception("no_user_logged_in")
+
+        deleted_at = int(time.time())
+
+        db, cursor = x.db()
+        q = "UPDATE items SET item_deleted_at = %s WHERE item_pk = %s"
+        cursor.execute(q, (deleted_at, item_pk))
+        if cursor.rowcount != 1:
+            raise Exception("delete_failed")
+
+        db.commit()
+
+        message = texts.get("delete_item_success", "Item deleted successfully.")
+
+        return f"""
+        <mixhtml mix-replace="#toast-container">
+            <div class="toast-container">
+                <div class="toast toast-success">{message}</div>
+            </div>
+        </mixhtml>
+        <mixhtml mix-delay="2000" mix-redirect="/{lan}/profile"></mixhtml>
+        <mixhtml mix-remove="#item-{item_pk}"></mixhtml>
+        """
+
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals():
+            db.rollback()
+
+        lan = session.get("lan", lan)
+        if lan not in ["en", "dk"]:
+            lan = "en"
+        texts = languages.languages[lan]
+
+        message = texts.get("delete_item_failed", "An error occurred while deleting the item.")
+
+        return f"""
+        <mixhtml mix-replace="#toast-container">
+            <div class="toast-container">
+                <div class="toast toast-error">{message}</div>
+            </div>
+        </mixhtml>
+        """
 
     finally:
         if "cursor" in locals(): cursor.close()

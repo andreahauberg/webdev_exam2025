@@ -60,6 +60,10 @@
           <button type="submit" class="btn-primary">{{ languages.save }}</button>
           <button type="button" onclick="toggleEdit('{{ item.item_pk }}')" class="btn-secondary">{{ languages.cancel
             }}</button>
+            <button mix-delete="/{{ lan }}/item/{{ item.item_pk }}" class="block">
+  {{ languages.delete_item }}
+</button>
+
         </form>
       </div>
       {% endfor %}

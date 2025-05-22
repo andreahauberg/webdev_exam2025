@@ -131,7 +131,7 @@ def validate_item_price():
 
 
 ##############################
-ALLOWED_EXSTENSIONS = ["png", "jpg", "jpeg", "gif"]
+ALLOWED_EXSTENSIONS = ["png", "jpg", "jpeg", "webp"]
 MAX_FILE_SIZE = 1 * 1024 * 1024 #1MB size in bytes
 MAX_IMAGE_UPLOAD = 5
 MIN_IMAGE_UPLOAD = 3

@@ -38,6 +38,7 @@ languages = {
         "user_not_found": "User not found",
         "user_not_verified": "User not verified",
         "user_deleted": "Your Account has been deleted",
+        "user_blocked": "Your Account has been blocked",
         "login_success": "You have successfully logged in.",
 
         # Sign up texts
@@ -94,6 +95,7 @@ languages = {
         "save_changes": "Save Changes",
         "delete_account": "Delete account",
         "edit": "Edit",
+        "delete_item": "Delete Shelter",
 
         # Forgot password page
         "send_reset_link" : "Send Reset Link",
@@ -198,6 +200,7 @@ languages = {
         "user_not_found": "Bruger ikke fundet",
         "user_not_verified": "Bruger ikke verificeret",
         "user_deleted": "Din konto er blevet slettet",
+        "user_blocked": "Din konto er blevet blokeret",
         "login_success": "Du er nu logget ind.",
 
         # Sign up texts
@@ -253,6 +256,7 @@ languages = {
         "email": "Email",
         "save_changes": "Gem Ændringer",
         "delete_account": "Slet konto",
+        "delete_item": "Slet Shelter",
         "edit": "Rediger",
 
         # Forgot password page
