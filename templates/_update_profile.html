@@ -1,34 +1,46 @@
-<h2>{{ languages.update_profile_settings }}</h2>
-      <form id="edit-form-{{ user.user_pk }}" class="edit-form"
-        action="{{ url_for('update_profile', user_pk=user.user_pk, lan=lan)  }}" method="POST">
+<form id="edit-form-{{ user.user_pk }}" class="edit-form"
+      action="{{ url_for('update_profile', user_pk=user.user_pk, lan=lan) }}" method="POST">
 
-        <div class="form-group">
-          <label>
-            <span class="label">{{ languages.first_name }}</span>
-            <input type="text" name="user_name" value="{{ user.user_name }}" mix-check="{{ x.USER_NAME_REGEX }}">
-          </label>
-        </div>
-        <div class="form-group">
-          <label>
-            <span class="label">{{ languages.last_name }}</span>
-            <input type="text" name="user_last_name" value="{{ user.user_last_name }}"
-              mix-check="{{ x.USER_LAST_NAME_REGEX }}">
-          </label>
-        </div>
-        <div class="form-group">
-          <label>
-            <span class="label">{{ languages.username }}</span>
-            <input type="text" name="user_username" value="{{ user.user_username }}"
-              mix-check="{{ x.USER_USERNAME_REGEX }}">
-          </label>
-        </div>
-        <div class="form-group">
-          <label>
-            <span class="label">{{ languages.email }}</span>
-            <input type="email" name="user_email" value="{{ user.user_email }}" mix-check="{{ x.USER_EMAIL_REGEX }}">
-          </label>
-        </div>
+  <div class="form-group">
+    <div class="field">
+      <label for="txtFirstName">
+        <span class="label">{{ languages.first_name }}</span>
+        <span class="hint">{{ languages.validation_first_name }}</span>
+      </label>
+      <input id="txtFirstName" type="text" name="user_name" value="{{ user.user_name }}" mix-check="{{ x.USER_NAME_REGEX }}" required>
+    </div>
+  </div>
 
-        <button type="submit" class="btn-primary">{{ languages.save_changes }}</button>
-        <button mix-delete="/{{ lan }}/user" class="block">{{ languages.delete_account }}</button>
-      </form>
+  <div class="form-group">
+    <div class="field">
+      <label for="txtLastName">
+        <span class="label">{{ languages.last_name }}</span>
+        <span class="hint">{{ languages.validation_last_name }}</span>
+      </label>
+      <input id="txtLastName" type="text" name="user_last_name" value="{{ user.user_last_name }}" mix-check="{{ x.USER_LAST_NAME_REGEX }}" required>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="field">
+      <label for="txtUsername">
+        <span class="label">{{ languages.username }}</span>
+        <span class="hint">{{ languages.validation_username }}</span>
+      </label>
+      <input id="txtUsername" type="text" name="user_username" value="{{ user.user_username }}" mix-check="{{ x.USER_USERNAME_REGEX }}" required>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="field">
+      <label for="txtEmail">
+        <span class="label">{{ languages.email }}</span>
+        <span class="hint">{{ languages.validation_email }}</span>
+      </label>
+      <input id="txtEmail" type="email" name="user_email" value="{{ user.user_email }}" mix-check="{{ x.USER_EMAIL_REGEX }}" required>
+    </div>
+  </div>
+
+  <button type="submit" class="btn-primary">{{ languages.save_changes }}</button>
+  <button type="button" mix-delete="/{{ lan }}/user" class="btn-delete">{{ languages.delete_account }}</button>
+</form>

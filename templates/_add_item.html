@@ -1,47 +1,58 @@
-      <form action="/{{ lan }}/add-item"  method="POST" enctype="multipart/form-data">
-        <p>{{ languages.hello }} {{ user.user_name }} {{ user.user_last_name }}</p>
-        <h2>{{ error_message }}</h2>
+<form action="/{{ lan }}/add-item" method="POST" enctype="multipart/form-data">
+  <p>{{ languages.hello }} {{ user.user_name }} {{ user.user_last_name }}</p>
+  <h2>{{ error_message }}</h2>
 
-        <div class="form-group">
-          <label for="item_name">
-            <span class="label">{{ languages.shelter_name }}</span>
-            <span class="hint">{{ x.ITEM_NAME_MIN }} to {{ x.ITEM_NAME_MAX }} {{ languages.characters }}</span>
-          </label>
-          <input id="item_name" name="item_name" type="text" mix-check="{{ x.ITEM_NAME_REGEX }}"
-            value="{{ old_values.get('item_name', '') }}" />
-        </div>
+  <div class="form-group">
+    <label for="item_name">
+      <span class="label">{{ languages.shelter_name }}</span>
+      <span class="hint">{{ languages.validation_item_name }}</span>
+    </label>
+    <input id="item_name" name="item_name" type="text" mix-check="{{ x.ITEM_NAME_REGEX }}"
+      value="{{ old_values.get('item_name', '') }}" required/>
+  </div>
 
-        <div class="form-group">
-          <label for="item_address">
-            <span class="label">{{ languages.shelter_address }}</span>
-            <span class="hint">{{ x.ITEM_ADDRESS_MIN }} to {{ x.ITEM_ADDRESS_MAX }} {{ languages.characters }}</span>
-          </label>
-          <input id="item_address" name="item_address" type="text" mix-check="{{ x.ITEM_ADDRESS_REGEX }}"
-            value="{{ old_values.get('item_address', '') }}" />
-        </div>
+  <div class="form-group">
+    <label for="item_address">
+      <span class="label">{{ languages.shelter_address }}</span>
+      <span class="hint">{{ languages.validation_item_address }}</span>
+    </label>
+    <input id="item_address" name="item_address" type="text" mix-check="{{ x.ITEM_ADDRESS_REGEX }}"
+      value="{{ old_values.get('item_address', '') }}" required/>
+  </div>
 
-        <div class="form-group">
-          <label for="item_lat">{{ languages.latitude }}:</label>
-          <input id="item_lat" name="item_lat" type="text" mix-check="{{ x.LATITUDE_REGEX }}"
-            value="{{ old_values.get('item_lat', '') }}" />
-        </div>
+  <div class="form-group">
+    <label for="item_lat">
+      <span class="label">{{ languages.latitude }}</span>
+      <span class="hint">{{ languages.validation_latitude }}</span>
+    </label>
+    <input id="item_lat" name="item_lat" type="text" mix-check="{{ x.LATITUDE_REGEX }}"
+      value="{{ old_values.get('item_lat', '') }}" required/>
+  </div>
 
-        <div class="form-group">
-          <label for="item_lon">{{ languages.longitude }}:</label>
-          <input id="item_lon" name="item_lon" type="text" mix-check="{{ x.LONGITUDE_REGEX }}"
-            value="{{ old_values.get('item_lon', '') }}" />
-        </div>
+  <div class="form-group">
+    <label for="item_lon">
+      <span class="label">{{ languages.longitude }}</span>
+      <span class="hint">{{ languages.validation_longitude }}</span></label>
+    <input id="item_lon" name="item_lon" type="text" mix-check="{{ x.LONGITUDE_REGEX }}"
+      value="{{ old_values.get('item_lon', '') }}" required/>
+  </div>
 
-        <div class="form-group">
-          <label for="item_price">{{ languages.price }}:</label>
-          <input id="item_price" name="item_price" type="text" mix-check="{{ x.ITEM_PRICE_REGEX }}"
-            value="{{ old_values.get('item_price', '') }}" />
-        </div>
+  <div class="form-group">
+    <label for="item_price">
+      <span class="label">{{ languages.price }}</span>
+      <span class="hint">{{ languages.validation_price }}</span>
+    </label>
+    <input id="item_price" name="item_price" type="text" mix-check="{{ x.ITEM_PRICE_REGEX }}"
+      value="{{ old_values.get('item_price', '') }}" required/>
+  </div>
 
-        <div class="form-group">
-          <label for="item_image">{{ languages.upload_image }}:</label>
-          <input id="item_image" type="file" name="images" multiple accept="image/*" />
-        </div>
+  <div class="form-group">
+    <label for="item_image">
+      <span class="label">{{ languages.upload_image }}</span>
+      <span class="hint">{{ languages.validation_images }}</span>
+    </label>
+    <input id="item_image" type="file" name="images" multiple accept="image/*" required/>
+  </div>
 
-        <button class="btn-primary" type="submit">{{ languages.add_item }}</button>
-      </form>
+  <button class="btn-primary" type="submit">{{ languages.add_item }}</button>
+</form>

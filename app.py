@@ -22,6 +22,19 @@ Session(app)
 
 
 ##############################
+@app.after_request
+def disable_cache(response):
+    """
+    This function automatically disables caching for all responses.
+    It is applied after every request to the server.
+    """
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+
+##############################
 @app.context_processor
 def inject_language():
     lan = session.get("lan", "en")
@@ -149,6 +162,8 @@ def show_profile_default():
 @app.get("/<lan>/profile")
 def show_profile(lan):
     try:
+        if "user" not in session:
+            return redirect(url_for("show_login", lan=lan))
         # Allowed languages and fallback
         languages_allowed = ["en", "dk"]
         if lan not in languages_allowed:
@@ -651,11 +666,18 @@ def get_item_by_pk(item_pk, lan):
         with open("rates.txt", "r") as file:
             rates = json.load(file)
 
-        html = render_template("_item.html", item=item, rates=rates, languages=texts, lan=lan)
+        html_preview = render_template("_item.html", item=item, rates=rates, languages=texts, lan=lan)
+        html_mini = render_template("_item_mini.html", item=item, rates=rates, languages=texts)
 
         return f"""
             <mixhtml mix-replace="#item">
-                {html}
+                {html_preview}
+            </mixhtml>
+            <mixhtml mix-replace="#items">
+                {html_mini}
+            </mixhtml>
+            <mixhtml mix-function="add_markers_to_map">
+                {json.dumps([item])}
             </mixhtml>
         """
 
@@ -903,6 +925,9 @@ def show_admin_default():
 @app.get("/<lan>/admin")
 def show_admin(lan):
     try:
+        if "user" not in session:
+            return redirect(url_for("show_login", lan=lan))
+        
         languages_allowed = ["en", "dk"]
         if lan not in languages_allowed: 
             lan = "en"
@@ -914,8 +939,8 @@ def show_admin(lan):
         message_type = session.pop("message_type", "")
 
         db, cursor = x.db()
-        q_users = "SELECT * FROM users"
-        cursor.execute(q_users)
+        q_users = "SELECT * FROM users WHERE user_role = %s"
+        cursor.execute(q_users, ("user",))
         users = cursor.fetchall()
 
         # Get items (like on index)
@@ -929,12 +954,27 @@ def show_admin(lan):
             rates = file.read()
         rates = json.loads(rates)  # Convert to dict
 
+        item_pks = [item['item_pk'] for item in items]
+        if item_pks:
+            format_strings = ','.join(['%s'] * len(item_pks))
+            q_images = f"SELECT item_pk, image_name FROM images WHERE item_pk IN ({format_strings})"
+            cursor.execute(q_images, tuple(item_pks))
+            images = cursor.fetchall()
+        else:
+            images = []
+
+        # Group images by item_pk
+        images_by_item = {}
+        for img in images:
+            images_by_item.setdefault(img['item_pk'], []).append(img['image_name'])
+
         # Session check
         is_session = 'user' in session
 
         return render_template("admin.html",
                                users=users,
                                items=items,
+                               images_by_item=images_by_item,
                                rates=rates,
                                is_session=is_session,
                                languages=texts,
@@ -1384,12 +1424,14 @@ def show_reset_password_default():
 @app.get("/<lan>/reset-password/<verification_key>")
 def show_reset_password(verification_key, lan):
     try:
+        message = session.pop("message", "")
+        message_type = session.pop("message_type", "")
         languages_allowed = ["en", "dk"]
         if lan not in languages_allowed: 
             lan = "en"
             session["lan"] = lan
         texts = languages.languages[lan]
-        return render_template("reset_password.html", verification_key=verification_key, title=texts["page_title_reset"], languages=texts)
+        return render_template("reset_password.html", verification_key=verification_key, title=texts["page_title_reset"], languages=texts, message=message, message_type=message_type,)
     except Exception as ex:
         ic(ex)
         return "Error loading reset form", 500
@@ -1437,7 +1479,7 @@ def reset_password(verification_key, lan):
         if "db" in locals(): db.rollback()
         session["message"] = ex.args[0] if ex.args else texts.get("reset_failed", "Password reset failed.")
         session["message_type"] = "error"
-        return redirect(url_for("show_reset_password", verification_key=verification_key, lan=lan))
+        return redirect(url_for("show_forgot_password", verification_key=verification_key, lan=lan))
 
     finally:
         if "cursor" in locals(): cursor.close()
@@ -1547,3 +1589,4 @@ def delete_item(lan, item_pk):
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+

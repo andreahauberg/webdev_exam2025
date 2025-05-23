@@ -1,9 +1,9 @@
 {% include "_head.html" %}
 
 <body>
+    {% include "_language_nav.html" %}
     {% include "_header.html" %}
     <main id="login">
-        {% include "_language_nav.html" %}
         <div id="toast-container" class="toast-container">
             {% if message %}
             <div class="toast toast-{{ message_type }}">
@@ -17,14 +17,20 @@
             <h1>{{ languages.login_title }}</h1>
 
             <div class="field">
-                <label for="txtEmail">{{ languages.email_label }}</label>
-                <input id="txtEmail" name="user_email"  value="{{ old_values.get('user_email', '') }}"
-                    autocomplete="email">
+                <label for="txtEmail">
+                    <span class="label">{{ languages.email_label }}</span>
+                    <span class="hint">{{ languages.validation_email }}</span>
+                </label>
+                <input id="txtEmail" name="user_email" value="{{ old_values.get('user_email', '') }}"
+                    autocomplete="email" required>
             </div>
 
             <div class="field">
-                <label for="txtPassword">{{ languages.password_label }}</label>
-                <input id="txtPassword" name="user_password" type="password" autocomplete="current-password">
+                <label for="txtPassword">
+                    <span class="label">{{ languages.password_label }}</span>
+                    <span class="hint">{{ languages.validation_password }}</span>
+                </label>
+                <input id="txtPassword" name="user_password" type="password" autocomplete="current-password" required>
             </div>
 
             <button class="btn-primary" type="submit">{{ languages.login_button }}</button>

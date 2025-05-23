@@ -1,80 +1,103 @@
+
 {% for item in items %}
-  <div class="item">
-    <h3>{{ item.item_name }}</h3>
-    <p>{{ item.item_address }}</p>
-    <div class="images">
-      {% for img_filename in images_by_item.get(item.item_pk, []) %}
-        <img src="{{ url_for('static', filename='uploads/' + img_filename) }}" alt="{{ languages.item_image_alt }}"
-             style="max-width: 150px;" />
-      {% endfor %}
+<div class="item_edit">
+  <h3>{{ item.item_name }}</h3>
+  <p>{{ item.item_address }}</p>
+  <div class="images_edit">
+    {% for img_filename in images_by_item.get(item.item_pk, []) %}
+    <img src="{{ url_for('static', filename='uploads/' + img_filename) }}" alt="{{ languages.item_image_alt }}"/>
+    {% endfor %}
+  </div>
+  <p>
+    {{ languages.price }}:
+    {% if lan == "en" %}
+    {{ "{:,}".format(item.item_price) }} USD
+    {% elif lan == "dk" %}
+    {{ "{:,.0f}".format(item.item_price * rates.rates.DKK) }} DKK
+    {% else %}
+    {{ "{:,}".format(item.item_price) }} USD
+    {% endif %}
+  </p>
+</div>
+
+<button class="btn-secondary" onclick="toggleEdit('{{ item.item_pk }}')">{{ languages.edit }}</button>
+
+<form id="edit-form-{{ item.item_pk }}" class="edit-form"
+  action="{{ url_for('update_item_inline', item_pk=item.item_pk, lan=lan) }}" method="POST"
+  style="display: none; margin-top: 1em;">
+
+  <div class="form-group">
+    <div class="field">
+      <label for="txtItemName">
+        <span class="label">{{ languages.shelter_name }}</span>
+        <span class="hint">{{ languages.validation_item_name }}</span>
+      </label>
+      <input id="txtItemName" type="text" name="item_name" value="{{ item.item_name }}"
+        mix-check="{{ x.ITEM_NAME_REGEX }}" required>
     </div>
-    <p>
-      {{ languages.price }}: 
-      {% if lan == "en" %}
-        {{ "{:,}".format(item.item_price) }} USD
-      {% elif lan == "dk" %}
-        {{ "{:,.0f}".format(item.item_price * rates.rates.DKK) }} DKK
-      {% else %}
-        {{ "{:,}".format(item.item_price) }} USD
-      {% endif %}
-    </p>
   </div>
 
+  <div class="form-group">
+    <div class="field">
+      <label for="txtItemAddress">
+        <span class="label">{{ languages.shelter_address }}</span>
+        <span class="hint">{{ languages.validation_item_address }}</span>
+      </label>
+      <input id="txtItemAddress" type="text" name="item_address" value="{{ item.item_address }}"
+        mix-check="{{ x.ITEM_ADDRESS_REGEX }}" required>
+    </div>
+  </div>
 
-        <button class="btn-secondary" onclick="toggleEdit('{{ item.item_pk }}')">{{ languages.edit }}</button>
+  <div class="form-group">
+    <div class="field">
+      <label for="txtLatitude">
+        <span class="label">{{ languages.latitude }}</span>
+        <span class="hint">{{ languages.validation_latitude }}</span>
+      </label>
+      <input id="txtLatitude" type="text" name="item_lat" value="{{ item.item_lat }}"
+        mix-check="{{ x.LATITUDE_REGEX }}" required>
+    </div>
+  </div>
 
-        <form id="edit-form-{{ item.item_pk }}" class="edit-form"
-          action="{{ url_for('update_item_inline', item_pk=item.item_pk, lan=lan) }}" method="POST"
-          style="display: none; margin-top: 1em;">
-          <div class="form-group">
-            <label>
-              <span class="label">{{ languages.shelter_name }}</span>
-              <input type="text" name="item_name" value="{{ item.item_name }}" mix-check="{{ x.ITEM_NAME_REGEX }}">
-            </label>
-          </div>
-          <div class="form-group">
-            <label>
-              <span class="label">{{ languages.shelter_address }}</span>
-              <input type="text" name="item_address" value="{{ item.item_address }}"
-                mix-check="{{ x.ITEM_ADDRESS_REGEX }}">
-            </label>
-          </div>
-          <div class="form-group">
-            <label>
-              <span class="label">{{ languages.latitude }}</span>
-              <input type="text" name="item_lat" value="{{ item.item_lat }}" mix-check="{{ x.LATITUDE_REGEX }}">
-            </label>
-          </div>
-          <div class="form-group">
-            <label>
-              <span class="label">{{ languages.longitude }}</span>
-              <input type="text" name="item_lon" value="{{ item.item_lon }}" mix-check="{{ x.LONGITUDE_REGEX }}">
-            </label>
-          </div>
-          <div class="form-group">
-            <label>
-              <span class="label">{{ languages.price }}</span>
-              <input type="text" name="item_price" value="{{ item.item_price }}" mix-check="{{ x.ITEM_PRICE_REGEX }}">
-            </label>
-          </div>
-          <button type="submit" class="btn-primary">{{ languages.save }}</button>
-          <button type="button" onclick="toggleEdit('{{ item.item_pk }}')" class="btn-secondary">{{ languages.cancel
-            }}</button>
-            <button mix-delete="/{{ lan }}/item/{{ item.item_pk }}" class="block">
-  {{ languages.delete_item }}
-</button>
+  <div class="form-group">
+    <div class="field">
+      <label for="txtLongitude">
+        <span class="label">{{ languages.longitude }}</span>
+        <span class="hint">{{ languages.validation_longitude }}</span>
+      </label>
+      <input id="txtLongitude" type="text" name="item_lon" value="{{ item.item_lon }}"
+        mix-check="{{ x.LONGITUDE_REGEX }}" required>
+    </div>
+  </div>
 
-        </form>
-      </div>
-      {% endfor %}
+  <div class="form-group">
+    <div class="field">
+      <label for="txtPrice">
+        <span class="label">{{ languages.price }}</span>
+        <span class="hint">{{ languages.validation_price }}</span>
+      </label>
+      <input id="txtPrice" type="text" name="item_price" value="{{ item.item_price }}"
+        mix-check="{{ x.ITEM_PRICE_REGEX }}" required>
+    </div>
+  </div>
 
-    <script>
-              function toggleEdit(itemPk) {
-        const form = document.getElementById("edit-form-" + itemPk);
-        if (form.style.display === "none") {
-          form.style.display = "block";
-        } else {
-          form.style.display = "none";
-        }
-      }
-    </script>
+  <button type="submit" class="btn-primary">{{ languages.save }}</button>
+  <button type="button" onclick="toggleEdit('{{ item.item_pk }}')" class="btn-secondary">{{ languages.cancel }}</button>
+  <button type="button" mix-delete="/{{ lan }}/item/{{ item.item_pk }}" class="btn-delete">{{ languages.delete_item
+    }}</button>
+
+</form>
+
+</div>
+{% endfor %}
+
+<script>
+  function toggleEdit(itemPk) {
+    const form = document.getElementById("edit-form-" + itemPk);
+    if (form.style.display === "none") {
+      form.style.display = "block";
+    } else {
+      form.style.display = "none";
+    }
+  }
+</script>

@@ -1,4 +1,4 @@
-body > header {
+#main_header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -19,12 +19,12 @@ body > header {
           font-weight: var(--font-semibold);
 
           &:hover {
-            color: var(--secondary-color);
+            color: var(--primary-color);
           }
         }
 
         button:hover {
-          color: var(--secondary-color);
+          color: var(--primary-color);
         }
       }
     }

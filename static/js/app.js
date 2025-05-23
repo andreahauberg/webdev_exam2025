@@ -29,10 +29,11 @@ function search() {
           search_results.innerHTML = "";
           data.results.forEach((item) => {
             const a = `
-              <div class="instant-item">
-                <img src="/static/uploads/${item.item_image}">
-                <a href="/${item.item_name}">${item.item_name}</a>
-              </div>
+             <div class="instant-item">
+  <img src="/static/uploads/${item.item_image}">
+  <div class="search-name" mix-get="/items/${item.item_pk}">${item.item_name}</div>
+</div>
+
             `;
             search_results.insertAdjacentHTML("beforeend", a);
           });
@@ -65,7 +66,6 @@ addEventListener("click", function (event) {
 // ###############################################
 
 // Map
-
 window.add_markers_to_map = function (data) {
   try {
     if (typeof data === "string") {
@@ -97,5 +97,3 @@ window.add_markers_to_map = function (data) {
   }
 };
 
-
-// ###############################################

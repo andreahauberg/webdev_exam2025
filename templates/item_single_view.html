@@ -1,8 +1,8 @@
 {% include "_head.html" %}
 <body>
+    {% include "_language_nav.html" %}
 {% include "_header.html" %}
 <main id="item-single-view">
-{% include "_language_nav.html" %}
     <section>
         <h1>{{ languages.your_chosen_shelter }}</h1>
         <p class="error-message">{{ error_message }}</p>
@@ -11,8 +11,6 @@
             <h2 class="item-name">{{ item.item_name }}</h2>
             
             <img src="{{ url_for('static', filename='uploads/' + item.item_image) }}" alt="{{ item.item_name }}" class="single-item-image">
-
-            <p class="item-description">{{ item.item_description }}</p>
 
             {% if lan == "en" %}
                 <p class="price-usd">
@@ -32,7 +30,7 @@
                 {{ item.item_address }}
             </p>
 
-            <a href="{{ url_for('show_index', lan=lan) }}" class="btn-secondary">{{ languages.back_to_home }}</a>
+            <a href="{{ url_for('show_index', lan=lan) }}" class="btn-primary">{{ languages.back_to_home }}</a>
         </article>
     </section>
 </main>

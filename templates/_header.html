@@ -1,4 +1,4 @@
-<header>
+<header id="main_header">
     <a href="{{ url_for('show_index', lan=lan) }}" title="{{ languages.back_home }}">
         <img src="{{ url_for('static', filename='icons/shelter.svg') }}" alt="Shelter Logo" class="logo">
     </a>
@@ -6,7 +6,7 @@
     <div id="desktop_menu">
         <nav id="main_nav">
             <ul>
-                <li><a class="{{ active_index }}" href="{{ url_for('show_index', lan=lan) }}" title="{{ languages.back_home }}">{{ languages.home }}</a></li>
+                <li><a href="{{ url_for('show_index', lan=lan) }}" title="{{ languages.back_home }}">{{ languages.home }}</a></li>
             </ul>
         </nav>
 

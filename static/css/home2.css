@@ -1,0 +1,235 @@
+body {
+
+  font-family: 'Inter', sans-serif;
+
+}
+
+#index {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+   min-height: 100vh;
+}
+
+/* Map section */
+#map {
+  width: 100%;
+  height: 300px;
+  background-color: #ddd; 
+  border-radius: 12px;
+}
+
+/* Item full view */
+#right {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+#item img {
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+#item p {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+}
+
+/* Mini items */
+#items_more {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+#items {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.item {
+  display: block;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: transform 0.2s ease;
+}
+
+.item:hover {
+  transform: translateY(-2px);
+}
+
+.item img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+#button_more_items {
+  padding: 0.75rem;
+  border: none;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+#button_more_items:hover {
+  background-color: var(--hover-color);
+}
+
+/* --- Desktop layout --- */
+@media (min-width: 1024px) {
+  #index {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+
+  #map {
+    flex: 1;
+    height: 500px;
+    position: sticky;
+    top: 1rem;
+
+  }
+
+  #items_more {
+    flex: 1;
+  }
+
+  #items {
+    grid-template-columns: 1fr;
+  }
+
+  #right {
+    flex: 1;
+    position: sticky;
+    top: 1rem;
+  }
+
+  #items_more{
+    /* display: flex;
+    flex-direction: column;
+    width: 100%; */
+    #items{
+        display: grid;
+        grid-template-columns: 10fr 10fr;
+        gap: 0.5rem;
+        width: 100%;
+        .item{
+            /* padding:0.2rem;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);            
+            width: 100%; */
+            text-decoration: none;
+            *{
+                pointer-events: none;
+                color: black;
+            }
+            p{                
+                font-size: 1.3rem;
+            }
+            div{
+                margin-top: 0.5rem;
+            }
+            img{
+                width: 100%;
+                height: 6rem;
+                object-fit: cover;
+                border-radius: 5px;
+            }
+        }
+    }
+ 
+}
+}
+
+#index_main{
+
+#search_container {
+    position: relative;
+    width: 100%;
+    max-width: var(--form-max-width);
+    margin: var(--spacing-xl) auto;
+}
+
+#input_search {
+    height: var(--spacing-3xl);
+    width: 100%;
+    padding: var(--spacing-lg) var(--spacing-xxxl);
+    border-radius: var(--border-radius-md);
+    background-color: var(--input-bg);
+}
+
+#search_results {
+    position: absolute;
+    top: calc(var(--spacing-3xl) + var(--spacing-xs)); /* Small offset below input */
+    left: 0;
+    width: 100%;
+    background: var(--input-bg);
+    z-index: var(--z-index-1001);
+    flex-direction: column;
+    box-shadow: 0px var(--shadow-px-sm) var(--shadow-px-mdlg) rgba(0, 0, 0, var(--opacity-md));
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    padding: var(--spacing-lg) var(--spacing-xxxl);
+}
+
+#search_results.active {
+    display: flex;
+}
+
+.instant-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    cursor: pointer;
+}
+
+.instant-item * {
+    pointer-events: none;
+}
+
+.instant-item img {
+    width: var(--spacing-3xxl);
+    height: var(--spacing-3xxl);
+    margin-right: var(--spacing-xl);
+    border-radius: var(--border-radius-full);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    border: 0;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin: 2rem 0;
+    text-align: center;
+}
+
+}
+
+body, html {
+  overflow-x: visible;
+  overflow-y: auto;
+}
