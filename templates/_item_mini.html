@@ -1,4 +1,4 @@
-<a href="/{{ lan }}/items/{{ item.item_pk }}" mix-get class="item">
+<a href="/{{ lan }}/items/{{ item.item_pk }}" mix-get class="item d-desktop">
     <img src="{{ url_for('static', filename='uploads/'+ item.item_image) }}">
     <p>
         {{ item.item_name }}
@@ -13,3 +13,22 @@
         {% endif %}
     </div>
 </a>
+
+<div class="item d-mobile">
+    <img src="{{ url_for('static', filename='uploads/'+item.item_image) }}">
+    <p>
+        {{ item.item_name }}
+    </p>    
+    <div>
+        {% if lan == "en" %}
+            {{ "{:,}".format(item.item_price) }} USD
+        {% elif lan == "dk" %}
+            {{ "{:,.0f}".format(item.item_price * rates.rates.DKK) }} DKK
+        {% else %}
+            {{ "{:,}".format(item.item_price) }} USD
+        {% endif %}
+    </div>    
+    <a href="{{ url_for('show_single_item', lan=lan, item_pk=item.item_pk) }}" target="_blank">
+        {{ languages.open_in_window }}
+    </a>
+</div>

@@ -134,6 +134,10 @@ def show_index(lan):
         if lan not in languages_allowed: 
             lan = "en"
             session["lan"] = lan
+
+        message = session.pop("message", "")
+        message_type = session.pop("message_type", "")
+
         texts = languages.languages[lan]
         db, cursor = x.db()
         q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 ORDER BY item_created_at DESC LIMIT 2"
@@ -146,7 +150,8 @@ def show_index(lan):
         rates = json.loads(rates)
         is_session = False
         if session.get("user"): is_session = True
-        return render_template("index.html", languages=texts,   title=texts["page_title_index"], items=items, is_session = is_session, rates=rates)
+        return render_template("index.html", languages=texts,   title=texts["page_title_index"], items=items, is_session = is_session, rates=rates, message=message,
+            message_type=message_type,)
     except Exception as ex:
         ic(ex)
         return "ups"
@@ -184,9 +189,10 @@ def show_profile(lan):
                     SELECT * FROM items
                     WHERE item_blocked_at = 0
                     AND item_deleted_at = 0
+                    AND user_fk = %s
                     ORDER BY item_created_at DESC
                     """
-        cursor.execute(q_items)
+        cursor.execute(q_items, (session["user"]["user_pk"],))
         items = cursor.fetchall()
 
         # Read rates from file (json)
@@ -293,13 +299,12 @@ def signup(lan):
         hashed_password = generate_password_hash(user_password)
         verification_key = str(uuid.uuid4())
         user_created_at = int(time.time())
-        user_updated_at = int(time.time())
 
         q = """INSERT INTO users
         (user_pk, user_name, user_last_name, user_email, user_username, user_password,
          user_created_at, user_updated_at, user_deleted_at, user_blocked_at, user_verified_at,
          user_verification_key, user_role)
-         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 0, 0, 0, %s, 'user')"""
+         VALUES (%s, %s, %s, %s, %s, %s, %s, 0, 0, 0, 0, %s, 'user')"""
 
         db, cursor = x.db()
         cursor.execute(q, (
@@ -310,7 +315,6 @@ def signup(lan):
             user_username,
             hashed_password,
             user_created_at,
-            user_updated_at,
             verification_key
         ))
 
@@ -509,7 +513,7 @@ def login(lan):
         if user["user_verified_at"] == 0:
             raise Exception(texts["user_not_verified"])
         if user["user_deleted_at"] != 0:
-            raise Exception(texts["user_blocked"])
+            raise Exception(texts["user_deleted"])
         if user["user_blocked_at"] != 0:
             raise Exception(texts["user_blocked"])
         if not check_password_hash(user["user_password"], user_password):
@@ -667,14 +671,10 @@ def get_item_by_pk(item_pk, lan):
             rates = json.load(file)
 
         html_preview = render_template("_item.html", item=item, rates=rates, languages=texts, lan=lan)
-        html_mini = render_template("_item_mini.html", item=item, rates=rates, languages=texts)
 
         return f"""
             <mixhtml mix-replace="#item">
                 {html_preview}
-            </mixhtml>
-            <mixhtml mix-replace="#items">
-                {html_mini}
             </mixhtml>
             <mixhtml mix-function="add_markers_to_map">
                 {json.dumps([item])}
@@ -713,9 +713,9 @@ def get_items_by_page(page_number):
             rates = json.loads(rates)
 
         for item in items[:items_per_page]:
-            i = render_template("_item_mini.html", item=item, rates=rates, languages=texts)
+            i = render_template("_item_mini.html", item=item, rates=rates, languages=texts, lan=lan)
             html += i
-        button = render_template("_button_more_items.html", page_number=page_number + 1, languages=texts)
+        button = render_template("_button_more_items.html", page_number=page_number + 1, languages=texts, lan=lan)
         if len(items) < extra_item: button = ""
         return f"""
             <mixhtml mix-bottom="#items">
@@ -763,23 +763,28 @@ def search():
         db, cursor = x.db()
 
         q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 AND item_name LIKE %s"
-        cursor.execute(q, (f"{search_for}%",))
+        cursor.execute(q, (f"%{search_for}%",))
         items = cursor.fetchall()
 
         if not items:
             raise Exception(texts["no_results"])
 
-        # Return JSON data as a list of dicts
-        return {"results": items}
+        html_items = render_template("_items_mini_list.html", items=items, languages=texts, lan=lan)  # Ny inkluderet mini-liste
+
+        return {
+            "results": items,
+            "html_items": html_items
+        }
 
     except Exception as ex:
         ic(ex)
-        message = ex.args[0] if lan in locals() and isinstance(ex.args[0], str) else texts.get("search_failed", "Search failed")
+        message = ex.args[0] if isinstance(ex.args[0], str) else texts.get("search_failed", "Search failed")
         return {"error": message}, 400
 
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
 
 
 
@@ -865,6 +870,9 @@ def add_item(lan):
             cursor.execute(q_images)
 
         db.commit()
+        session["message"] = texts.get("item_uploaded", "Item updated successfully")
+        session["message_type"] = "success"
+
         return redirect(url_for("show_index", lan=lan))
 
     except Exception as ex:
@@ -939,7 +947,7 @@ def show_admin(lan):
         message_type = session.pop("message_type", "")
 
         db, cursor = x.db()
-        q_users = "SELECT * FROM users WHERE user_role = %s"
+        q_users = "SELECT * FROM users WHERE user_role = %s AND user_deleted_at = 0"
         cursor.execute(q_users, ("user",))
         users = cursor.fetchall()
 
@@ -1362,6 +1370,9 @@ def delete_user(lan):
             lan = "en"
         texts = languages.languages[lan]
 
+        message = session.pop("message", "")
+        message_type = session.pop("message_type", "")
+
         user = session.get("user")
         if not user:
             raise Exception("no_user_logged_in")
@@ -1370,10 +1381,16 @@ def delete_user(lan):
         deleted_at = int(time.time())
 
         db, cursor = x.db()
-        q = "UPDATE users SET user_deleted_at = %s WHERE user_pk = %s"
-        cursor.execute(q, (deleted_at, user_pk))
+
+        # Slet brugeren (sæt user_deleted_at)
+        q1 = "UPDATE users SET user_deleted_at = %s WHERE user_pk = %s"
+        cursor.execute(q1, (deleted_at, user_pk))
         if cursor.rowcount != 1:
             raise Exception("delete_failed")
+
+        # Marker alle brugerens items som slettede
+        q2 = "UPDATE items SET item_deleted_at = %s WHERE user_fk = %s"
+        cursor.execute(q2, (deleted_at, user_pk))
 
         db.commit()
         session.pop("user", None)
@@ -1413,6 +1430,7 @@ def delete_user(lan):
     finally:
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
+
 
 
 
@@ -1539,10 +1557,9 @@ def delete_item(lan, item_pk):
             lan = "en"
         texts = languages.languages[lan]
 
-        # Check if admin or owner, if needed – optional
-        # user = session.get("user")
-        # if not user:
-        #     raise Exception("no_user_logged_in")
+        user = session.get("user")
+        if not user:
+            raise Exception(texts.get("no_user_logged_in", "No user was logged in"))
 
         deleted_at = int(time.time())
 
@@ -1550,7 +1567,7 @@ def delete_item(lan, item_pk):
         q = "UPDATE items SET item_deleted_at = %s WHERE item_pk = %s"
         cursor.execute(q, (deleted_at, item_pk))
         if cursor.rowcount != 1:
-            raise Exception("delete_failed")
+            raise Exception(texts.get("delete_item_failed", "We could not delete item"))
 
         db.commit()
 

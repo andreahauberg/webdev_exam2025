@@ -1,4 +1,4 @@
-#main_header {
+body>header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -7,16 +7,16 @@
   nav {
     ul {
       list-style: none;
+      
 
       li {
         margin: 0 var(--spacing-xl);
-        color: var(--dark-text-color);
-
+        
         a {
           text-decoration: none;
-          color: var(--dark-text-color);
           font-size: var(--font-size-xl);
           font-weight: var(--font-semibold);
+          color: var(--dark-text-color);
 
           &:hover {
             color: var(--primary-color);
@@ -184,6 +184,7 @@
         border-radius: var(--border-radius-md);
         border: var(--border-width-md) solid var(--light-background-color);
         color: var(--primary-color);
+        
 
         &:hover {
           border: var(--border-width-md) solid var(--hover-color);
@@ -220,6 +221,7 @@
       border-radius: var(--border-radius-md);
       border: var(--border-width-md) solid var(--primary-color);
       color: var(--primary-color);
+   
       font-size: var(--font-size-lg);
 
       &:hover {

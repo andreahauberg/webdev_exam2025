@@ -1,42 +1,42 @@
-try {
-  let mix_replace_url = document.querySelector("[mix-url]");
-  if (mix_replace_url) {
-    mix_replace_url = mix_replace_url.getAttribute("mix-url");
-    console.log(mix_replace_url);
-    history.replaceState(
-      { mix_page: mix_replace_url },
-      "title",
-      mix_replace_url
-    );
-  } else {
-    console.log("Single Page App not possible. https://mixhtml.com/spa");
-  }
-  // history.replaceState({"mix_page":mix_replace_url}, "title", mix_replace_url)
-} catch (err) {
-  console.log(err);
-  console.log(
-    `Warning: Single Page App not possible, since mix_replace_url not set`
-  );
-}
+// try {
+//   let mix_replace_url = document.querySelector("[mix-url]");
+//   if (mix_replace_url) {
+//     mix_replace_url = mix_replace_url.getAttribute("mix-url");
+//     console.log(mix_replace_url);
+//     history.replaceState(
+//       { mix_page: mix_replace_url },
+//       "title",
+//       mix_replace_url
+//     );
+//   } else {
+//     console.log("Single Page App not possible. https://mixhtml.com/spa");
+//   }
+//   // history.replaceState({"mix_page":mix_replace_url}, "title", mix_replace_url)
+// } catch (err) {
+//   console.log(err);
+//   console.log(
+//     `Warning: Single Page App not possible, since mix_replace_url not set`
+//   );
+// }
 // ##############################
 window.onpopstate = function (event) {
   mix_switch_page(event.state.mix_page, false);
 };
 // ##############################
-history.scrollRestoration = "manual";
-let ignoreScroll = false;
-window.addEventListener("popstate", () => {
-  ignoreScroll = true;
-  setTimeout(() => {
-    ignoreScroll = false;
-  }, 100);
-});
-window.addEventListener("scroll", () => {
-  if (ignoreScroll) return;
-  document
-    .querySelector("[mix-on='yes']")
-    .setAttribute("mix-y", window.scrollY);
-});
+// history.scrollRestoration = "manual";
+// let ignoreScroll = false;
+// window.addEventListener("popstate", () => {
+//   ignoreScroll = true;
+//   setTimeout(() => {
+//     ignoreScroll = false;
+//   }, 100);
+// });
+// window.addEventListener("scroll", () => {
+//   if (ignoreScroll) return;
+//   document
+//     .querySelector("[mix-on='yes']")
+//     .setAttribute("mix-y", window.scrollY);
+// });
 // ##############################
 setInterval(async function () {
   try {

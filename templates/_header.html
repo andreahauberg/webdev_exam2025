@@ -41,12 +41,6 @@
             <img src="{{ url_for('static', filename='icons/X.svg') }}" alt="Close menu icon">
         </button>
 
-        <nav id="mobile_main_nav">
-            <ul>
-                <li><a class="{{ active_index }}" href="{{ url_for('show_index', lan=lan) }}" title="{{ languages.back_home }}">{{ languages.home }}</a></li>
-            </ul>
-        </nav>
-
         {% if is_session %}
         <nav id="mobile_utility_logged">
             <ul>
@@ -66,5 +60,11 @@
             </ul>
         </nav>
         {% endif %}
+
+                <nav id="mobile_main_nav">
+            <ul>
+                <li><a class="{{ active_index }}" href="{{ url_for('show_index', lan=lan) }}" title="{{ languages.back_home }}">{{ languages.home }}</a></li>
+            </ul>
+        </nav>
     </div>
 </header>

@@ -54,40 +54,27 @@
             </div>
             {% endfor %}
         </section>
-            <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const tabs = document.querySelectorAll(".tab-btn");
-    const contents = document.querySelectorAll(".tab-content");
-
-    function activateTab(tabId) {
-      tabs.forEach(t => t.classList.remove("active"));
-      contents.forEach(c => c.classList.remove("active"));
-
-      const tab = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
-      const content = document.getElementById(tabId);
-      if (tab && content) {
-        tab.classList.add("active");
-        content.classList.add("active");
-      }
-    }
-
-    const savedTab = sessionStorage.getItem("activeTab");
-    if (savedTab) {
-      activateTab(savedTab);
-    } else {
-      activateTab(tabs[0].getAttribute("data-tab"));
-    }
-
-    tabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        const selected = tab.getAttribute("data-tab");
-        activateTab(selected);
-        sessionStorage.setItem("activeTab", selected);
-      });
-    });
-  });
-</script>
-
 </main>
 
-{% include "_footer.html" %}
+<footer>
+    <div id="social_icons">
+        <a href="https://twitter.com" target="_blank">
+            <img src="{{ url_for('static', filename='icons/Twitter.svg') }}" alt="Twitter logo" height="30" width="30" loading="lazy"> 
+        </a>
+        <a href="https://linkedin.com" target="_blank">
+            <img src="{{ url_for('static', filename='icons/Linkedin.svg') }}" alt="LinkedIn logo" height="30" width="30" loading="lazy"> 
+        </a>
+        <a href="https://facebook.com" target="_blank">
+            <img src="{{ url_for('static', filename='icons/Facebook.svg') }}" alt="Facebook logo" height="30" width="30" loading="lazy"> 
+        </a>
+        <a href="https://instagram.com" target="_blank">
+            <img src="{{ url_for('static', filename='icons/Instagram.svg') }}" alt="Instagram logo" height="30" width="30" loading="lazy"> 
+        </a>
+    </div>
+    <p id="footer-copy">&copy; 2023 {{ languages.footer_credit }}</p>
+</footer>
+    <script src="{{ url_for('static', filename='js/mixhtml.js') }}" ></script>
+    <script src="{{ url_for('static', filename='js/burger.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/tabActive.js') }}"></script>
+</body>
+</html>

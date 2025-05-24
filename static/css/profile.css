@@ -47,7 +47,7 @@
   }
 }
 
-#manage-items {
+#manage-items-user {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xxl);
@@ -57,7 +57,7 @@
   box-sizing: border-box;
 }
 
-#manage-items .item_edit {
+#manage-items-user .item_edit {
   background: var(--light-text-color);
   border: var(--border-width-sm) solid var(--border-color);
   border-radius: var(--border-radius-md);
@@ -71,25 +71,25 @@
   box-sizing: border-box;
 }
 
-#manage-items .item_edit h3 {
+#manage-items-user .item_edit h3 {
   margin: 0 0 var(--spacing-sm) 0;
   font-size: var(--font-size-lg);
   color: var(--dark-text-color);
 }
 
-#manage-items .item_edit p {
+#manage-items-user .item_edit p {
   margin: 0;
   color: var(--quaternary-color);
   font-size: var(--font-size-md);
 }
 
-#manage-items .item_edit .images_edit {
+#manage-items-user .item_edit .images_edit {
   display: flex;
   gap: var(--spacing-md);
   overflow-x: auto;
 }
 
-#manage-items .item_edit .images_edit img {
+#manage-items-user .item_edit .images_edit img {
   max-width: var(--full-scale); /* tilpasser sig containerens bredde */
   border-radius: var(--border-radius-sm);
   object-fit: cover;
@@ -99,7 +99,7 @@
 
 /* Media query til mobil skærme */
 @media (max-width: 480px) {
-  #manage-items .item_edit {
+  #manage-items-user .item_edit {
     flex: 1 1 var(--full-scale); /* fylder hele bredden på små skærme */
     max-width: var(--full-scale);
   }

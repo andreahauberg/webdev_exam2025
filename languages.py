@@ -40,6 +40,7 @@ languages = {
         "user_deleted": "Your Account has been deleted",
         "user_blocked": "Your Account has been blocked",
         "login_success": "You have successfully logged in.",
+        "no_user_logged_in": "No user was logged in",
 
         # Sign up texts
         "signup_title": "Sign up",
@@ -96,6 +97,9 @@ languages = {
         "delete_account": "Delete account",
         "edit": "Edit",
         "delete_item": "Delete Shelter",
+        "delete_item_success": "Your shelter was delted",
+        "update_failed": "We could not update your profile",
+        "profile_updated": "Your profile have now been updated",
 
         # Forgot password page
         "send_reset_link" : "Send Reset Link",
@@ -139,11 +143,13 @@ languages = {
         "item_not_found": "Item not found.",
         "system_error": "An unexpected error occurred. Please try again later.",
         "invalid_page_number": "Invalid page number.",
-        "invalid_shelter_name": f"Shelter name must be between 2 and 50 characters.",
-        "invalid_address": f"Address must be between 5 and 100 characters.",
+        "invalid_shelter_name": "Shelter name must be between 2 and 50 characters.",
+        "invalid_address": "Address must be between 5 and 100 characters.",
         "invalid_latitude": "Invalid latitude format.",
         "invalid_longitude": "Invalid longitude format.",
-        "invalid_price": f"Price must be between 0 and 10000 and have at most 2 decimal places.",
+        "invalid_price": "Price must be between 0 and 10000 and have at most 2 decimal places.",
+        "item_uploaded": "Your shelter have been uploaded",
+        "item_updated": "Your shelter have been updated",
 
 
         #Images
@@ -157,6 +163,7 @@ languages = {
         #Delete
           "delete_success": "Your account has been deleted.",
           "delete_failed": "We couldn't delete your account. Please try again.",
+          "delete_item_failed": "We couldn't delete your shelter. Please try again.",
 
         #Search
         "no_results": "No results found.",
@@ -216,6 +223,7 @@ languages = {
         "user_deleted": "Din konto er blevet slettet",
         "user_blocked": "Din konto er blevet blokeret",
         "login_success": "Du er nu logget ind.",
+        "no_user_logged_in": "Ingen bruger er logget ind",
 
         # Sign up texts
         "signup_title": "Opret bruger",
@@ -272,6 +280,9 @@ languages = {
         "delete_account": "Slet konto",
         "delete_item": "Slet Shelter",
         "edit": "Rediger",
+        "delete_item_success": "Dit shelter er blevet slettet",
+        "update_failed": "Vi kunne ikke opdatere din profil",
+        "profile_updated": "Din profil er nu blevet opdateret",
 
         # Forgot password page
         "send_reset_link": "Send nulstillingslink",
@@ -321,6 +332,8 @@ languages = {
         "invalid_latitude": "Ugyldigt format for breddegrad.",
         "invalid_longitude": "Ugyldigt format for længdegrad.",
         "invalid_price": "Prisen skal være mellem 0 og 10000 og må højst have to decimaler.",
+        "item_uploaded": "Dit shelter er nu uploaded",
+        "item_updated": "Dit shelter er blevet opdateret",
 
 
         #Images
@@ -334,6 +347,7 @@ languages = {
         #Delete
         "delete_success": "Din konto er blevet slettet.",
         "delete_failed": "Vi kunne ikke slette din konto. Prøv igen.",
+        "delete_item_failed": "Vi kunne ikke slette dit shelter. Prøv igen.",
 
         #search
         "no_results": "Ingen resultater fundet.",
