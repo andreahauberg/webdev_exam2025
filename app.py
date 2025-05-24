@@ -1520,6 +1520,8 @@ def show_single_item(item_pk, lan):
         texts = languages.languages[lan]
 
         db, cursor = x.db()
+
+        # Hent item
         q = "SELECT * FROM items WHERE item_pk = %s AND item_blocked_at = 0 AND item_deleted_at = 0"
         cursor.execute(q, (item_pk,))
         item = cursor.fetchone()
@@ -1527,14 +1529,33 @@ def show_single_item(item_pk, lan):
         if not item:
             session["message"] = texts.get("item_not_found", "The requested item does not exist.")
             session["message_type"] = "error"
-            return redirect(url_for("show_index", lan=lan))  
+            return redirect(url_for("show_index", lan=lan))
 
+        # Hent billeder for dette item
+        q_images = "SELECT item_pk, image_name FROM images WHERE item_pk = %s"
+        cursor.execute(q_images, (item_pk,))
+        images = cursor.fetchall()
+
+        # Lav dict med item_pk som nøgle og liste af image_names som værdi
+        images_by_item = {}
+        for img in images:
+            images_by_item.setdefault(img['item_pk'], []).append(img['image_name'])
+
+        # Load rates
         with open("rates.txt", "r") as file:
             rates = json.load(file)
 
         page_title = f"{item['item_name']} | {texts['page_title_item_suffix']}"
 
-        return render_template("item_single_view.html", title=page_title, item=item, rates=rates, languages=texts)
+        return render_template(
+            "item_single_view.html",
+            title=page_title,
+            item=item,
+            rates=rates,
+            languages=texts,
+            images_by_item=images_by_item,
+            lan=lan
+        )
 
     except Exception as ex:
         ic(ex)
@@ -1543,8 +1564,11 @@ def show_single_item(item_pk, lan):
         return redirect(url_for("show_index", lan=lan))
 
     finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
+
 
 
 

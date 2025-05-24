@@ -94,6 +94,7 @@
 
 .unblock {
     width: var(--full-scale);
+    min-width: var(--block-min-width);
     min-height: var(--touch-size);
     padding: var(--spacing-md);
     border: none;

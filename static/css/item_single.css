@@ -22,6 +22,14 @@
   gap: var(--spacing-lg);
 }
 
+.single-item-images-scroll {
+    display: flex;
+    gap: var(--spacing-md);
+    overflow-x: auto;
+    padding-bottom: var(--spacing-sm);
+    scroll-behavior: smooth;
+}
+
 .item-name {
   font-size: var(--font-size-xl);
   font-weight: var(--font-bolder);
@@ -31,11 +39,12 @@
 }
 
 .single-item-image {
-  width: var(--full-scale);
-  height: 300px;
-  object-fit: cover;
-  border-radius: var(--border-radius-sm);
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+    max-height: var(--width-sm);
+    width: auto;
+    height: auto;
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--preview-shadow);
+    flex-shrink: 0;
 }
 
 .price-usd,
