@@ -1507,6 +1507,7 @@ def show_single_item_default(item_pk):
 @app.get("/<lan>/single-item/<item_pk>")
 def show_single_item(item_pk, lan):
     try:
+        
         languages_allowed = ["en", "dk"]
         if lan not in languages_allowed: 
             lan = "en"
@@ -1537,6 +1538,10 @@ def show_single_item(item_pk, lan):
 
         page_title = f"{item['item_name']} | {texts['page_title_item_suffix']}"
 
+        is_session = False
+        if session.get("user"): 
+            is_session = True
+
         return render_template(
             "item_single_view.html",
             title=page_title,
@@ -1544,7 +1549,8 @@ def show_single_item(item_pk, lan):
             rates=rates,
             languages=texts,
             images_by_item=images_by_item,
-            lan=lan
+            lan=lan,
+            is_session=is_session
         )
 
     except Exception as ex:
