@@ -7,11 +7,11 @@ body>header {
   nav {
     ul {
       list-style: none;
-      
+
 
       li {
         margin: 0 var(--spacing-xl);
-        
+
         a {
           text-decoration: none;
           font-size: var(--font-size-xl);
@@ -28,7 +28,7 @@ body>header {
         }
       }
     }
-   
+
   }
 
   a img {
@@ -46,7 +46,10 @@ body>header {
   display: block;
 }
 
-.nav_button, .btnLogout, #close_btn, #burger_btn {
+.nav_button,
+.btnLogout,
+#close_btn,
+#burger_btn {
   all: unset;
   cursor: pointer;
   padding: var(--spacing-lg);
@@ -64,6 +67,7 @@ body>header {
 #side_menu {
   position: fixed;
   top: 0;
+  padding-top: 2rem;
   right: var(--right-side-menu);
   width: var(--width-sm);
   height: var(--full-scale);
@@ -138,11 +142,12 @@ body>header {
   right: 0;
 }
 
-#side_menu.open ~ #overlay {
+#side_menu.open~#overlay {
   display: block;
 }
 
 @media (min-width: 768px) {
+
   #burger_btn,
   #side_menu {
     display: none;
@@ -184,7 +189,7 @@ body>header {
         border-radius: var(--border-radius-md);
         border: var(--border-width-md) solid var(--light-background-color);
         color: var(--primary-color);
-        
+
 
         &:hover {
           border: var(--border-width-md) solid var(--hover-color);
@@ -221,7 +226,7 @@ body>header {
       border-radius: var(--border-radius-md);
       border: var(--border-width-md) solid var(--primary-color);
       color: var(--primary-color);
-   
+
       font-size: var(--font-size-lg);
 
       &:hover {

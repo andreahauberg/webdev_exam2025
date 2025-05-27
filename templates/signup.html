@@ -1,72 +1,70 @@
 {% include "_head.html" %}
 
-<body>
-    {% include "_language_nav.html" %}
-    {% include "_header.html" %}
-    <main id="signup">
-        <form id="frmSignup" action="/{{ lan }}/signup" method="post">
-            <h1>{{ languages.signup_title }}</h1>
-            <div id="toast-container" class="toast-container">
-                {% if message %}
-                <div class="toast toast-{{ message_type }}">
-                    {{ message }}
-                </div>
-                {% endif %}
+{% include "_language_nav.html" %}
+{% include "_header.html" %}
+<main id="signup">
+    <form id="frmSignup" action="/{{ lan }}/signup" method="post">
+        <h1>{{ languages.signup_title }}</h1>
+        <div id="toast-container" class="toast-container">
+            {% if message %}
+            <div class="toast toast-{{ message_type }}">
+                {{ message }}
             </div>
+            {% endif %}
+        </div>
 
-            <div class="two-col">
-                <div class="field">
-                    <label for="txtFirstName">
-                        <span class="label">{{ languages.signup_first_name }}</span>
-                        <span class="hint">{{ languages.validation_first_name }}</span>
-                    </label>
-                    <input id="txtFirstName" name="user_name" type="text" value="{{ old_values.get('user_name', '') }}"
-                        required autocomplete="given-name">
-                </div>
-
-                <div class="field">
-                    <label for="txtLastName">
-                        <span class="label">{{ languages.signup_last_name }}</span>
-                        <span class="hint">{{ languages.validation_last_name }}</span>
-                    </label>
-                    <input id="txtLastName" name="user_last_name" type="text"
-                        value="{{ old_values.get('user_last_name', '') }}" required autocomplete="family-name">
-                </div>
+        <div class="two-col">
+            <div class="field">
+                <label for="txtFirstName">
+                    <span class="label">{{ languages.signup_first_name }}</span>
+                    <span class="hint">{{ languages.validation_first_name }}</span>
+                </label>
+                <input id="txtFirstName" name="user_name" type="text" value="{{ old_values.get('user_name', '') }}"
+                    required autocomplete="given-name">
             </div>
 
             <div class="field">
-                <label for="txtEmail">
-                    <span class="label">{{ languages.signup_email }}</span>
-                    <span class="hint">{{ languages.validation_email }}</span>
+                <label for="txtLastName">
+                    <span class="label">{{ languages.signup_last_name }}</span>
+                    <span class="hint">{{ languages.validation_last_name }}</span>
                 </label>
-                <input id="txtEmail" name="user_email" value="{{ old_values.get('user_email', '') }}" required
-                    autocomplete="email">
+                <input id="txtLastName" name="user_last_name" type="text"
+                    value="{{ old_values.get('user_last_name', '') }}" required autocomplete="family-name">
             </div>
+        </div>
 
-            <div class="field">
-                <label for="txtUsername">
-                    <span class="label">{{ languages.signup_username }}</span>
-                    <span class="hint">{{ languages.validation_username }}</span>
-                </label>
-                <input id="txtUsername" name="user_username" type="text"
-                    value="{{ old_values.get('user_username', '') }}" required autocomplete="username">
-            </div>
+        <div class="field">
+            <label for="txtEmail">
+                <span class="label">{{ languages.signup_email }}</span>
+                <span class="hint">{{ languages.validation_email }}</span>
+            </label>
+            <input id="txtEmail" name="user_email" value="{{ old_values.get('user_email', '') }}" required
+                autocomplete="email">
+        </div>
 
-            <div class="field">
-                <label for="txtPassword">
-                    <span class="label">{{ languages.signup_password }}</span>
-                    <span class="hint">{{ languages.validation_password }}</span>
-                </label>
-                <input id="txtPassword" name="user_password" type="password" required autocomplete="new-password">
-            </div>
+        <div class="field">
+            <label for="txtUsername">
+                <span class="label">{{ languages.signup_username }}</span>
+                <span class="hint">{{ languages.validation_username }}</span>
+            </label>
+            <input id="txtUsername" name="user_username" type="text" value="{{ old_values.get('user_username', '') }}"
+                required autocomplete="username">
+        </div>
 
-            <button class="btn-primary" type="submit">{{ languages.signup_button }}</button>
+        <div class="field">
+            <label for="txtPassword">
+                <span class="label">{{ languages.signup_password }}</span>
+                <span class="hint">{{ languages.validation_password }}</span>
+            </label>
+            <input id="txtPassword" name="user_password" type="password" required autocomplete="new-password">
+        </div>
 
-            <p class="login-link">
-                {{ languages.signup_login_text }}
-                <a href="{{ url_for('login', lan=lan) }}">{{ languages.signup_login_link }}</a>
-            </p>
-        </form>
-    </main>
-    {% include "_footer.html" %}
-</body>
+        <button class="btn-primary" type="submit">{{ languages.signup_button }}</button>
+
+        <p class="login-link">
+            {{ languages.signup_login_text }}
+            <a href="{{ url_for('login', lan=lan) }}">{{ languages.signup_login_link }}</a>
+        </p>
+    </form>
+</main>
+{% include "_footer.html" %}

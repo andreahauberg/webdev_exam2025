@@ -3,7 +3,6 @@ import mysql.connector
 import re
 import uuid
 import os
-
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -16,10 +15,10 @@ ic.configureOutput(prefix=f'***** | ', includeContext=True)
 ##############################
 def db():
     db = mysql.connector.connect(
-        host = "mysql",      # Replace with your MySQL server's address or docker service name "mysql"
-        user = "root",  # Replace with your MySQL username
-        password = "password",  # Replace with your MySQL password
-        database = "shelter"   # Replace with your MySQL database name
+        host = "mysql",     
+        user = "root",  
+        password = "password",  
+        database = "shelter"   
     )
     cursor = db.cursor(dictionary=True)
     return db, cursor
@@ -59,7 +58,7 @@ USER_EMAIL_REGEX = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 def validate_user_email(texts):
     user_email = request.form.get("user_email", "").strip()
     if not re.match(USER_EMAIL_REGEX, user_email):
-        raise Exception(texts["invalid_email"])  # Use localized error message
+        raise Exception(texts["invalid_email"]) 
     return user_email
 
 ##############################
@@ -132,13 +131,13 @@ def validate_item_price():
 
 ##############################
 ALLOWED_EXSTENSIONS = ["png", "jpg", "jpeg", "webp"]
-MAX_FILE_SIZE = 1 * 1024 * 1024 #1MB size in bytes
+MAX_FILE_SIZE = 1 * 1024 * 1024 
 MAX_IMAGE_UPLOAD = 5
 MIN_IMAGE_UPLOAD = 3
 
 def validate_item_images():
     images_names = []
-    files = request.files.getlist("images")  # <-- Changed from "files" to "images"
+    files = request.files.getlist("images")  
 
     if not files or all(not f.filename for f in files):
         raise Exception("no_images_uploaded")

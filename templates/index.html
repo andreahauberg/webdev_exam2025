@@ -87,18 +87,18 @@
     <script src="{{ url_for('static', filename='js/mixhtml.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     <script>
-                var map = L.map('map', {
-                    center: [55.6, 11.9],
-                    zoom: 8,
-                    scrollWheelZoom: false,   
-                    doubleClickZoom: false,   
-                    dragging: true,          
-                    zoomControl: false,       
-                    boxZoom: true,           
-                    keyboard: false,          
-                    tap: true,              
-                    attributionControl: false 
-                });
+        var map = L.map('map', {
+            center: [55.6, 11.9],
+            zoom: 8,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            dragging: true,
+            zoomControl: false,
+            boxZoom: true,
+            keyboard: false,
+            tap: true,
+            attributionControl: false
+        });
 
         // Add the OpenStreetMap tile layer to the map
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -107,15 +107,10 @@
 
         const initialItems = {{ items | tojson }};
         window.add_markers_to_map(initialItems);
-
     </script>
     <mixhtml mix-function="add_markers_to_map" class="hidden">
-  {{ items | tojson }}
-</mixhtml>
-
-
-
-
+        {{ items | tojson }}
+    </mixhtml>
 
 </body>
 

@@ -1,4 +1,3 @@
-// Nvigation
 function burgerMenu() {
   const burgerBtn = document.querySelector("#burger_btn");
   const sideMenu = document.querySelector("#side_menu");

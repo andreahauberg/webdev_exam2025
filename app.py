@@ -21,6 +21,10 @@ app.config['SESSION_TYPE'] = 'filesystem'
 Session(app)
 
 
+#*****************************#
+def SYSTEM(): pass
+#*****************************#
+
 ##############################
 @app.after_request
 def disable_cache(response):
@@ -76,6 +80,48 @@ def set_language(lan):
     return redirect(url_for("show_index", lan=lan))
 
 
+
+
+#*****************************#
+def DATA_AND_SEARCH(): pass
+#*****************************#
+
+##############################
+@app.get("/search")
+def search():
+    try:
+        lan = session.get("lan", "en")
+        if lan not in ["en", "dk"]:
+            lan = "en"
+        texts = languages.languages[lan]
+
+        search_for = x.validate_search_for(texts)
+        db, cursor = x.db()
+
+        q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 AND item_name LIKE %s"
+        cursor.execute(q, (f"%{search_for}%",))
+        items = cursor.fetchall()
+
+        if not items:
+            raise Exception(texts["no_results"])
+
+        html_items = render_template("_items_mini_list.html", items=items, languages=texts, lan=lan) 
+
+        return {
+            "results": items,
+            "html_items": html_items
+        }
+
+    except Exception as ex:
+        ic(ex)
+        message = ex.args[0] if isinstance(ex.args[0], str) else texts.get("search_failed", "Search failed")
+        return {"error": message}, 400
+
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
 ##############################
 @app.get("/rates")
 def get_rates():
@@ -89,18 +135,11 @@ def get_rates():
         ic(ex)
 
 
-##############################
-@app.after_request
-def disable_cache(response):
-    """
-    This function automatically disables caching for all responses.
-    It is applied after every request to the server.
-    """
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Expires"] = "0"
-    return response
 
+
+#*****************************#
+def EMAIL(): pass
+#*****************************#
 
 #############################
 @app.get("/send-email")
@@ -123,138 +162,19 @@ def send_reset_email():
         return "error"
 
 
-##############################
-@app.get("/")
-def show_index_default():
-    return redirect(url_for("show_index", lan="en"))
-@app.get("/<lan>")
-def show_index(lan):
-    try:
-        languages_allowed = ["en", "dk"]
-        if lan not in languages_allowed: 
-            lan = "en"
-            session["lan"] = lan
-
-        message = session.pop("message", "")
-        message_type = session.pop("message_type", "")
-
-        texts = languages.languages[lan]
-        db, cursor = x.db()
-        q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 ORDER BY item_created_at DESC LIMIT 2"
-        cursor.execute(q)
-        items = cursor.fetchall()
-        rates = ""
-        with open("rates.txt", "r") as file:
-            rates = file.read()
-        ic(rates)
-        rates = json.loads(rates)
-        is_session = False
-        if session.get("user"): is_session = True
-        return render_template("index.html", languages=texts,   title=texts["page_title_index"], items=items, is_session = is_session, rates=rates, message=message,
-            message_type=message_type,)
-    except Exception as ex:
-        ic(ex)
-        return "ups"
-    finally:
-        pass
 
 
-##############################
-@app.get("/profile")
-def show_profile_default():
-    return redirect(url_for("show_profile", lan="en"))
-
-@app.get("/<lan>/profile")
-def show_profile(lan):
-    try:
-        if "user" not in session:
-            return redirect(url_for("show_login", lan=lan))
-        # Allowed languages and fallback
-        languages_allowed = ["en", "dk"]
-        if lan not in languages_allowed:
-            lan = "en"
-            session["lan"] = lan
-        texts = languages.languages[lan]
-        old_values = session.pop("old_values", {})
-
-        # Pop toast message from session (single message + type)
-        message = session.pop("message", "")
-        message_type = session.pop("message_type", "")
-
-        # DB connection
-        db, cursor = x.db()
-
-        # Fetch all items (you may want to filter by user, if needed)
-        q_items = """
-                    SELECT * FROM items
-                    WHERE item_blocked_at = 0
-                    AND item_deleted_at = 0
-                    AND user_fk = %s
-                    ORDER BY item_created_at DESC
-                    """
-        cursor.execute(q_items, (session["user"]["user_pk"],))
-        items = cursor.fetchall()
-
-        # Read rates from file (json)
-        with open("rates.txt", "r") as file:
-            rates = json.load(file)
-
-        # Fetch images for all items
-        item_pks = [item['item_pk'] for item in items]
-        if item_pks:
-            format_strings = ','.join(['%s'] * len(item_pks))
-            q_images = f"SELECT item_pk, image_name FROM images WHERE item_pk IN ({format_strings})"
-            cursor.execute(q_images, tuple(item_pks))
-            images = cursor.fetchall()
-        else:
-            images = []
-
-        # Group images by item_pk
-        images_by_item = {}
-        for img in images:
-            images_by_item.setdefault(img['item_pk'], []).append(img['image_name'])
-
-        # Session active?
-        is_session = "user" in session
-
-        # Render template with unified message
-        return render_template(
-            "profile.html",
-            title=texts["page_title_profile"],
-            user=session.get("user"),
-            x=x,
-            is_session=is_session,
-            message=message,
-            message_type=message_type,
-            old_values=old_values,
-            items=items,
-            images_by_item=images_by_item,
-            lan=lan,
-            languages=texts,
-            rates=rates,
-        )
-
-    except Exception as ex:
-        ic(ex)
-        return redirect(url_for("show_login"))
-    finally:
-        if "cursor" in locals():
-            cursor.close()
-        if "db" in locals():
-            db.close()
-
-
-
+#*****************************#
+def AUTHENTICATION(): pass
+#*****************************#
 
 ##############################
 @app.get("/signup")
 def show_signup_default():
     return redirect(url_for("show_signup", lan="en"))
-
 @app.get("/<lan>/signup")
 def show_signup(lan):
     try:
-        # Retrieve messages from session, if any
         message = session.pop("message", "")
         message_type = session.pop("message_type", "")
         old_values = session.pop("old_values", {})
@@ -280,6 +200,7 @@ def show_signup(lan):
         ic(ex)
     finally:
         pass
+
 
 ##############################
 @app.post("/<lan>/signup")
@@ -325,7 +246,6 @@ def signup(lan):
 
         x.send_email(user_name, user_last_name, user_email, verification_key, lan)
 
-        # Use session to store success message for redirect
         session["message"] = texts["signup_success"]
         session["message_type"] = "success"
 
@@ -338,10 +258,8 @@ def signup(lan):
 
         old_values = request.form.to_dict()
 
-        # Handle validation and database errors inline, render template with error message and old values
         error_str = str(ex).lower()
 
-        # Map possible errors to keys and error message fields
         if "username" in error_str:
             old_values.pop("user_username", None)
             return render_template("signup.html",
@@ -392,7 +310,6 @@ def signup(lan):
                                    lan=lan,
                                    languages=texts)
 
-        # Handle unique constraint errors via redirect + session messages (email and username exists)
         if "users.user_email" in error_str:
             session["message"] = texts.get("email_exists", "Email already exists")
             session["message_type"] = "error"
@@ -403,7 +320,6 @@ def signup(lan):
             session["message_type"] = "error"
             return redirect(url_for("show_signup", lan=lan))
 
-        # Fallback: redirect with error message in session
         session["message"] = ex.args[0] if ex.args else "Unknown error"
         session["message_type"] = "error"
         return redirect(url_for("show_signup", lan=lan))
@@ -413,7 +329,6 @@ def signup(lan):
             cursor.close()
         if "db" in locals():
             db.close()
-
 
 
 #############################
@@ -459,12 +374,10 @@ def verify(verification_key, lan):
             db.close()
 
 
-
 ##############################
 @app.get("/login")
 def show_login_default():
     return redirect(url_for("show_login", lan="en"))
-
 @app.get("/<lan>/login")
 def show_login(lan):
     try:
@@ -567,23 +480,68 @@ def login(lan):
         if "db" in locals(): db.close()
 
 
-
 ##############################
 @app.get("/logout")
 def logout_default():
     return redirect(url_for("logout", lan=session.get("lan", "en")))
-
 @app.get("/<lan>/logout")
 def logout(lan):
     session.pop("user", None)
     return redirect(url_for("show_login", lan=lan))
 
 
+
+
+#*****************************#
+def HOME(): pass
+#*****************************#
+
+##############################
+@app.get("/")
+def show_index_default():
+    return redirect(url_for("show_index", lan="en"))
+@app.get("/<lan>")
+def show_index(lan):
+    try:
+        languages_allowed = ["en", "dk"]
+        if lan not in languages_allowed: 
+            lan = "en"
+            session["lan"] = lan
+
+        message = session.pop("message", "")
+        message_type = session.pop("message_type", "")
+
+        texts = languages.languages[lan]
+        db, cursor = x.db()
+        q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 ORDER BY item_created_at DESC LIMIT 2"
+        cursor.execute(q)
+        items = cursor.fetchall()
+        rates = ""
+        with open("rates.txt", "r") as file:
+            rates = file.read()
+        ic(rates)
+        rates = json.loads(rates)
+        is_session = False
+        if session.get("user"): is_session = True
+        return render_template("index.html", languages=texts,   title=texts["page_title_index"], items=items, is_session = is_session, rates=rates, message=message,
+            message_type=message_type,)
+    except Exception as ex:
+        ic(ex)
+        return "ups"
+    finally:
+        pass
+
+
+
+
+#*****************************#
+def RECET_PASSWORD(): pass
+#*****************************#
+
 ##############################
 @app.get("/forgot-password")
 def show_forgot_password_default():
     return redirect(url_for("show_forgot_password", lan="en"))
-
 @app.get("/<lan>/forgot-password")
 def show_forgot_password(lan):
     try:
@@ -601,7 +559,6 @@ def show_forgot_password(lan):
         ic(ex)
         return "Error loading page", 500
     
-
 
 ##############################
 @app.post("/<lan>/forgot-password")
@@ -646,234 +603,201 @@ def forgot_password(lan):
         if "cursor" in locals(): cursor.close()
         if "db" in locals(): db.close()
 
-##############################
-@app.get("/items/<item_pk>")
-def get_item_by_pk_default(item_pk):
-    return redirect(url_for("get_item_by_pk", lan="en", item_pk=item_pk))
 
-@app.get("/<lan>/items/<item_pk>")
-def get_item_by_pk(item_pk, lan):
+##############################
+@app.get("/reset-password/<verification_key>")
+def show_reset_password_default():
+    return redirect(url_for("reset-password", lan="en"))
+@app.get("/<lan>/reset-password/<verification_key>")
+def show_reset_password(verification_key, lan):
+    try:
+        message = session.pop("message", "")
+        message_type = session.pop("message_type", "")
+        languages_allowed = ["en", "dk"]
+        if lan not in languages_allowed: 
+            lan = "en"
+            session["lan"] = lan
+        texts = languages.languages[lan]
+        return render_template("reset_password.html", verification_key=verification_key, title=texts["page_title_reset"], languages=texts, message=message, message_type=message_type,)
+    except Exception as ex:
+        ic(ex)
+        return "Error loading reset form", 500
+
+
+###############################
+@app.post("/<lan>/reset-password/<verification_key>")
+def reset_password(verification_key, lan):
     try:
         languages_allowed = ["en", "dk"]
-        if lan not in languages_allowed:lan = "en"
+        if lan not in languages_allowed:
+            lan = "en"
         session["lan"] = lan
         texts = languages.languages[lan]
 
+        new_password = x.validate_user_password(texts)
+        hashed_password = generate_password_hash(new_password)
+
         db, cursor = x.db()
-        q = "SELECT * FROM items WHERE item_pk = %s AND item_blocked_at = 0 AND item_deleted_at = 0"
-        cursor.execute(q, (item_pk,))
-        item = cursor.fetchone()
 
-        if not item:
-            return texts.get("item_not_found", "Item not found."), 500
+        q = "SELECT user_pk FROM users WHERE user_verification_key = %s AND user_verified_at != 0"
+        cursor.execute(q, (verification_key,))
+        user = cursor.fetchone()
+        if not user:
+            raise Exception(texts["reset_invalid_link"])
 
+        q_update = """
+        UPDATE users
+        SET user_password = %s,
+            user_verification_key = NULL,
+            user_updated_at = %s
+        WHERE user_pk = %s
+        """
+        cursor.execute(q_update, (hashed_password, int(time.time()), user["user_pk"]))
+        db.commit()
+
+        session["message"] = texts["reset_success"]
+        session["message_type"] = "success"
+        return redirect(url_for("show_login", lan=lan))
+
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals(): db.rollback()
+        session["message"] = ex.args[0] if ex.args else texts.get("reset_failed", "Password reset failed.")
+        session["message_type"] = "error"
+        return redirect(url_for("show_forgot_password", verification_key=verification_key, lan=lan))
+
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+
+
+#*****************************#
+def USER_PROFILE(): pass
+#*****************************#
+
+##############################
+@app.get("/profile")
+def show_profile_default():
+    return redirect(url_for("show_profile", lan="en"))
+@app.get("/<lan>/profile")
+def show_profile(lan):
+    try:
+        if "user" not in session:
+            return redirect(url_for("show_login", lan=lan))
+
+        languages_allowed = ["en", "dk"]
+        if lan not in languages_allowed:
+            lan = "en"
+            session["lan"] = lan
+        texts = languages.languages[lan]
+        old_values = session.pop("old_values", {})
+
+        message = session.pop("message", "")
+        message_type = session.pop("message_type", "")
+
+        db, cursor = x.db()
+
+        q_items = """
+                    SELECT * FROM items
+                    WHERE item_blocked_at = 0
+                    AND item_deleted_at = 0
+                    AND user_fk = %s
+                    ORDER BY item_created_at DESC
+                    """
+        cursor.execute(q_items, (session["user"]["user_pk"],))
+        items = cursor.fetchall()
+
+        # Read rates from file (json)
         with open("rates.txt", "r") as file:
             rates = json.load(file)
 
-        html_preview = render_template("_item.html", item=item, rates=rates, languages=texts, lan=lan)
+        # Fetch images for all items
+        item_pks = [item['item_pk'] for item in items]
+        if item_pks:
+            format_strings = ','.join(['%s'] * len(item_pks))
+            q_images = f"SELECT item_pk, image_name FROM images WHERE item_pk IN ({format_strings})"
+            cursor.execute(q_images, tuple(item_pks))
+            images = cursor.fetchall()
+        else:
+            images = []
 
-        return f"""
-            <mixhtml mix-replace="#item">
-                {html_preview}
-            </mixhtml>
-            <mixhtml mix-function="add_markers_to_map">
-                {json.dumps([item])}
-            </mixhtml>
-        """
+        # Group images by item_pk
+        images_by_item = {}
+        for img in images:
+            images_by_item.setdefault(img['item_pk'], []).append(img['image_name'])
 
-    except Exception as ex:
-        ic(ex)
-        return texts.get("system_error", "An error occurred while fetching the item."), 500
+        # Session active?
+        is_session = "user" in session
 
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
-
-
-##############################
-@app.get("/items/page/<page_number>")
-def get_items_by_page(page_number):
-    try:
-        lan = session.get("lan", "en")
-        texts = languages.languages.get(lan, languages.languages["en"])
-
-        page_number = x.validate_page_number(page_number)
-        items_per_page = 2
-        offset = (page_number-1) * items_per_page
-        extra_item = items_per_page + 1
-        db, cursor = x.db()
-        q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 ORDER BY item_created_at DESC LIMIT %s OFFSET %s"
-        cursor.execute(q, (extra_item, offset))
-        items = cursor.fetchall()
-        html = ""
-        
-        rates= ""
-        with open("rates.txt", "r") as file:
-            rates = file.read() # this is text that looks like json
-            rates = json.loads(rates)
-
-        for item in items[:items_per_page]:
-            i = render_template("_item_mini.html", item=item, rates=rates, languages=texts, lan=lan)
-            html += i
-        button = render_template("_button_more_items.html", page_number=page_number + 1, languages=texts, lan=lan)
-        if len(items) < extra_item: button = ""
-        return f"""
-            <mixhtml mix-bottom="#items">
-                {html}
-            </mixhtml>
-            <mixhtml mix-replace="#button_more_items">
-                {button}
-            </mixhtml>
-            <mixhtml mix-function="add_markers_to_map">
-                {json.dumps(items[:items_per_page])}
-            </mixhtml>            
-        """
-    except Exception as ex:
-        ic(ex)
-        if "company_ex page number" in str(ex):
-            message = texts.get("invalid_page_number", "Invalid page number.")
-            return """
-                <mixhtml mix-top="body">
-                    {message}
-                </mixhtml>
-            """
-        message = texts.get("system_error", "An error occurred while fetching items.")
-        return """
-            <mixhtml mix-top="body">
-                {message}
-            </mixhtml>
-        """
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
-
-
-
-
-##############################
-@app.get("/search")
-def search():
-    try:
-        lan = session.get("lan", "en")
-        if lan not in ["en", "dk"]:
-            lan = "en"
-        texts = languages.languages[lan]
-
-        search_for = x.validate_search_for(texts)
-        db, cursor = x.db()
-
-        q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 AND item_name LIKE %s"
-        cursor.execute(q, (f"%{search_for}%",))
-        items = cursor.fetchall()
-
-        if not items:
-            raise Exception(texts["no_results"])
-
-        html_items = render_template("_items_mini_list.html", items=items, languages=texts, lan=lan)  # Ny inkluderet mini-liste
-
-        return {
-            "results": items,
-            "html_items": html_items
-        }
+        # Render template with unified message
+        return render_template(
+            "profile.html",
+            title=texts["page_title_profile"],
+            user=session.get("user"),
+            x=x,
+            is_session=is_session,
+            message=message,
+            message_type=message_type,
+            old_values=old_values,
+            items=items,
+            images_by_item=images_by_item,
+            lan=lan,
+            languages=texts,
+            rates=rates,
+        )
 
     except Exception as ex:
         ic(ex)
-        message = ex.args[0] if isinstance(ex.args[0], str) else texts.get("search_failed", "Search failed")
-        return {"error": message}, 400
-
+        return redirect(url_for("show_login"))
     finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
+        if "cursor" in locals():
+            cursor.close()
+        if "db" in locals():
+            db.close()
 
 
+###############################
+@app.post("/<lan>/update-profile/<user_pk>")
+def update_profile(user_pk, lan):
+    languages_allowed = ["en", "dk"]
+    if lan not in languages_allowed:
+        lan = "en"
+    texts = languages.languages[lan]
 
-
-#################################
-@app.post("/<lan>/add-item")
-def add_item(lan):
     try:
-        if lan not in ["en", "dk"]:
-            lan = session.get("lan", "en")
-            if lan not in ["en", "dk"]:
-                lan = "en"
-        session["lan"] = lan
-
-        texts = languages.languages[lan]
-
-        user = session.get("user")
-        if not user or "user_pk" not in user:
-            raise Exception("User is not logged in")
-        user_pk = user["user_pk"]
-
-        item_pk = str(uuid.uuid4())
-        item_name = x.validate_item_name()
-        item_address = x.validate_item_address()
-        item_lat = x.validate_item_lat()
-        item_lon = x.validate_item_lon()
-        item_created_at = int(time.time())
-        item_price = x.validate_item_price()
-
-        # Billedhåndtering
-        item_icon = "shelter.svg"
-        image_filenames = x.validate_item_images()  # <- Now uses your validator
-
-        image_values = ""
-        timestamp = int(time.time())
-        first_image_filename = image_filenames[0]  # First validated/saved image
-
-        for filename in image_filenames:
-            image_pk = uuid.uuid4().hex
-            image_values += f"('{image_pk}', '{item_pk}', '{filename}', {timestamp}),"
-
+        user_name = x.validate_user_name(texts)
+        user_last_name = x.validate_user_last_name(texts)
+        user_username = x.validate_user_username(texts)
+        user_email = x.validate_user_email(texts)
+        user_updated_at = int(time.time())
 
         db, cursor = x.db()
-
-        # Indsæt item med hovedbillede
-        q_item = """INSERT INTO items
-                    (item_pk, 
-                    item_name, 
-                    item_image, 
-                    item_address,
-                    item_icon,
-                    item_price,  
-                    item_lon, 
-                    item_lat, 
-                    item_created_at, 
-                    item_blocked_at, 
-                    item_updated_at,
-                    item_deleted_at,
-                    user_fk 
-                    )
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-        cursor.execute(q_item, (
-            item_pk, 
-            item_name,
-            first_image_filename, 
-            item_address,
-            item_icon,
-            item_price,
-            item_lon, 
-            item_lat, 
-            item_created_at,
-            0,
-            None,
-            0,
-            user_pk
+        q = """UPDATE users 
+               SET user_name=%s, user_last_name=%s, user_username=%s, 
+                   user_email=%s, user_updated_at=%s
+               WHERE user_pk=%s"""
+        cursor.execute(q, (
+            user_name, user_last_name, user_username, user_email,
+            user_updated_at, user_pk
         ))
-        if cursor.rowcount != 1:
-            raise Exception(texts["could_not_insert_item"])
 
-        # Indsæt billeder
-        if image_values:
-            image_values = image_values.rstrip(",")
-            q_images = f"INSERT INTO images (image_pk, item_pk, image_name, created_at) VALUES {image_values}"
-            cursor.execute(q_images)
+        if cursor.rowcount != 1:
+            raise Exception(texts.get("update_failed", "Update failed"))
 
         db.commit()
-        session["message"] = texts.get("item_uploaded", "Item updated successfully")
-        session["message_type"] = "success"
 
-        return redirect(url_for("show_index", lan=lan))
+        q = "SELECT * FROM users WHERE user_pk = %s"
+        cursor.execute(q, (user_pk,))
+        updated_user = cursor.fetchone()
+        if updated_user:
+            updated_user.pop("user_password", None)
+            session["user"] = updated_user
+
+        session["message"] = texts.get("profile_updated", "Profile updated successfully")
+        session["message_type"] = "success"
+        return redirect(url_for("show_profile", lan=lan))
 
     except Exception as ex:
         ic(ex)
@@ -881,41 +805,130 @@ def add_item(lan):
             db.rollback()
 
         old_values = request.form.to_dict()
-        ex_str = str(ex).lower()
+        error_str = str(ex).lower()
 
-        if "invalid_shelter_name" in ex_str:
-            old_values.pop("item_name", None)
-            message = texts.get("invalid_shelter_name", "Invalid shelter name")
-        elif "address" in ex_str:
-            old_values.pop("item_address", None)
-            message = texts.get("invalid_address", "Invalid address")
-        elif "latitude" in ex_str:
-            old_values.pop("item_lat", None)
-            message = texts.get("invalid_latitude", "Invalid latitude")
-        elif "longitude" in ex_str:
-            old_values.pop("item_lon", None)
-            message = texts.get("invalid_longitude", "Invalid longitude")
-        elif "price" in ex_str:
-            old_values.pop("item_price", None)
-            message = texts.get("invalid_price", "Invalid price")
-        elif "no_images_uploaded" in ex_str:
-            message = texts.get("no_images_uploaded", "No images uploaded")
-        elif "not_enough_images_uploaded" in ex_str:
-            message = texts.get("not_enough_images_uploaded", "Please upload at least 3 images")
-        elif "max_upload_exceeded" in ex_str:
-            message = texts.get("max_upload_exceeded", "You can upload a maximum of 5 images.")
-        elif "file_extension_not_allowed" in ex_str:
-            message = texts.get("file_extension_not_allowed", "Only certain image types are allowed.")
-        elif "file_too_large" in ex_str:
-            message = texts.get("file_too_large", "Image too large.")
-        else:
-            message = texts.get("unknown_error", "An unexpected error occurred")
+        if "username" in error_str:
+            old_values.pop("user_username", None)
+            return render_template("update_profile.html",
+                                   message=texts.get("invalid_username", "Invalid username"),
+                                   message_type="error",
+                                   old_values=old_values,
+                                   user_username_error="input_error",
+                                   lan=lan,
+                                   languages=texts)
 
-        session["old_values"] = old_values
-        session["message"] = message
+        if "first_name" in error_str:
+            old_values.pop("user_name", None)
+            return render_template("update_profile.html",
+                                   message=texts.get("invalid_first_name", "Invalid first name"),
+                                   message_type="error",
+                                   old_values=old_values,
+                                   user_name_error="input_error",
+                                   lan=lan,
+                                   languages=texts)
+
+        if "last_name" in error_str:
+            old_values.pop("user_last_name", None)
+            return render_template("update_profile.html",
+                                   message=texts.get("invalid_last_name", "Invalid last name"),
+                                   message_type="error",
+                                   old_values=old_values,
+                                   user_last_name_error="input_error",
+                                   lan=lan,
+                                   languages=texts)
+
+        if "invalid_email" in error_str:
+            old_values.pop("user_email", None)
+            return render_template("update_profile.html",
+                                   message=texts.get("invalid_email", "Invalid email"),
+                                   message_type="error",
+                                   old_values=old_values,
+                                   user_email_error="input_error",
+                                   lan=lan,
+                                   languages=texts)
+
+        if "users.user_email" in error_str:
+            session["message"] = texts.get("email_exists", "Email already exists")
+            session["message_type"] = "error"
+            return redirect(url_for("show_profile", lan=lan))
+
+        if "users.user_username" in error_str:
+            session["message"] = texts.get("username_exists", "Username already exists")
+            session["message_type"] = "error"
+            return redirect(url_for("show_profile", lan=lan))
+
+        session["message"] = texts.get("unknown_error", str(ex))
         session["message_type"] = "error"
-
         return redirect(url_for("show_profile", lan=lan))
+
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+###############################
+@app.delete("/<lan>/user")
+def delete_user(lan):
+    try:
+        lan = session.get("lan", lan)
+        if lan not in ["en", "dk"]:
+            lan = "en"
+        texts = languages.languages[lan]
+
+        message = session.pop("message", "")
+        message_type = session.pop("message_type", "")
+
+        user = session.get("user")
+        if not user:
+            raise Exception("no_user_logged_in")
+
+        user_pk = user["user_pk"]
+        deleted_at = int(time.time())
+
+        db, cursor = x.db()
+
+        q1 = "UPDATE users SET user_deleted_at = %s WHERE user_pk = %s"
+        cursor.execute(q1, (deleted_at, user_pk))
+        if cursor.rowcount != 1:
+            raise Exception("delete_failed")
+
+        q2 = "UPDATE items SET item_deleted_at = %s WHERE user_fk = %s"
+        cursor.execute(q2, (deleted_at, user_pk))
+
+        db.commit()
+        session.pop("user", None)
+
+        message = texts.get("delete_success", "User account deleted successfully.")
+
+        return f"""
+        <mixhtml mix-replace="#toast-container">
+            <div class="toast-container">
+                <div class="toast toast-success">{message}</div>
+            </div>
+        </mixhtml>
+        <mixhtml mix-delay="2000" mix-redirect="/{lan}/login"></mixhtml>
+        """
+
+    except Exception as ex:
+        ic(ex)
+
+        if "db" in locals():
+            db.rollback()
+
+        lan = session.get("lan", lan)
+        if lan not in ["en", "dk"]:
+            lan = "en"
+        texts = languages.languages[lan]
+
+        message = texts.get("delete_failed", "An error occurred while deleting the user.")
+
+        return f"""
+        <mixhtml mix-replace="#toast-container">
+            <div class="toast-container">
+                <div class="toast toast-error">{message}</div>
+            </div>
+        </mixhtml>
+        """
 
     finally:
         if "cursor" in locals(): cursor.close()
@@ -924,12 +937,14 @@ def add_item(lan):
 
 
 
+#*****************************#
+def USER_ADMIN(): pass
+#*****************************#
 
 ###############################
 @app.get("/admin")
 def show_admin_default():
     return redirect(url_for("show_admin", lan="en"))
-
 @app.get("/<lan>/admin")
 def show_admin(lan):
     try:
@@ -951,16 +966,14 @@ def show_admin(lan):
         cursor.execute(q_users, ("user",))
         users = cursor.fetchall()
 
-        # Get items (like on index)
         q_items = "SELECT * FROM items WHERE item_deleted_at = 0 ORDER BY item_created_at"
         cursor.execute(q_items)
         items = cursor.fetchall()
 
-        # Load rates from file
         rates = ""
         with open("rates.txt", "r") as file:
             rates = file.read()
-        rates = json.loads(rates)  # Convert to dict
+        rates = json.loads(rates) 
 
         item_pks = [item['item_pk'] for item in items]
         if item_pks:
@@ -971,12 +984,10 @@ def show_admin(lan):
         else:
             images = []
 
-        # Group images by item_pk
         images_by_item = {}
         for img in images:
             images_by_item.setdefault(img['item_pk'], []).append(img['image_name'])
 
-        # Session check
         is_session = 'user' in session
 
         return render_template("admin.html",
@@ -999,6 +1010,7 @@ def show_admin(lan):
             cursor.close()
         if "db" in locals():
             db.close()
+
 
 ##############################
 @app.patch("/block-user/<user_pk>")
@@ -1042,7 +1054,6 @@ def block_user(user_pk):
             </div>
         </mixhtml>
         """
-
 
 
 ##############################
@@ -1175,6 +1186,244 @@ def unblock_item(item_pk):
         """
 
 
+
+
+#*****************************#
+def ITEM_HANDLING(): pass
+#*****************************#
+
+##############################
+@app.get("/items/<item_pk>")
+def get_item_by_pk_default(item_pk):
+    return redirect(url_for("get_item_by_pk", lan="en", item_pk=item_pk))
+@app.get("/<lan>/items/<item_pk>")
+def get_item_by_pk(item_pk, lan):
+    try:
+        languages_allowed = ["en", "dk"]
+        if lan not in languages_allowed:lan = "en"
+        session["lan"] = lan
+        texts = languages.languages[lan]
+
+        db, cursor = x.db()
+        q = "SELECT * FROM items WHERE item_pk = %s AND item_blocked_at = 0 AND item_deleted_at = 0"
+        cursor.execute(q, (item_pk,))
+        item = cursor.fetchone()
+
+        if not item:
+            return texts.get("item_not_found", "Item not found."), 500
+
+        with open("rates.txt", "r") as file:
+            rates = json.load(file)
+
+        html_preview = render_template("_item.html", item=item, rates=rates, languages=texts, lan=lan)
+
+        return f"""
+            <mixhtml mix-replace="#item">
+                {html_preview}
+            </mixhtml>
+            <mixhtml mix-function="add_markers_to_map">
+                {json.dumps([item])}
+            </mixhtml>
+        """
+
+    except Exception as ex:
+        ic(ex)
+        return texts.get("system_error", "An error occurred while fetching the item."), 500
+
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+##############################
+@app.get("/items/page/<page_number>")
+def get_items_by_page(page_number):
+    try:
+        lan = session.get("lan", "en")
+        texts = languages.languages.get(lan, languages.languages["en"])
+
+        page_number = x.validate_page_number(page_number)
+        items_per_page = 2
+        offset = (page_number-1) * items_per_page
+        extra_item = items_per_page + 1
+        db, cursor = x.db()
+        q = "SELECT * FROM items WHERE item_blocked_at = 0 AND item_deleted_at = 0 ORDER BY item_created_at DESC LIMIT %s OFFSET %s"
+        cursor.execute(q, (extra_item, offset))
+        items = cursor.fetchall()
+        html = ""
+        
+        rates= ""
+        with open("rates.txt", "r") as file:
+            rates = file.read() 
+            rates = json.loads(rates)
+
+        for item in items[:items_per_page]:
+            i = render_template("_item_mini.html", item=item, rates=rates, languages=texts, lan=lan)
+            html += i
+        button = render_template("_button_more_items.html", page_number=page_number + 1, languages=texts, lan=lan)
+        if len(items) < extra_item: button = ""
+        return f"""
+            <mixhtml mix-bottom="#items">
+                {html}
+            </mixhtml>
+            <mixhtml mix-replace="#button_more_items">
+                {button}
+            </mixhtml>
+            <mixhtml mix-function="add_markers_to_map">
+                {json.dumps(items[:items_per_page])}
+            </mixhtml>            
+        """
+    except Exception as ex:
+        ic(ex)
+        if "company_ex page number" in str(ex):
+            message = texts.get("invalid_page_number", "Invalid page number.")
+            return """
+                <mixhtml mix-top="body">
+                    {message}
+                </mixhtml>
+            """
+        message = texts.get("system_error", "An error occurred while fetching items.")
+        return """
+            <mixhtml mix-top="body">
+                {message}
+            </mixhtml>
+        """
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
+#################################
+@app.post("/<lan>/add-item")
+def add_item(lan):
+    try:
+        if lan not in ["en", "dk"]:
+            lan = session.get("lan", "en")
+            if lan not in ["en", "dk"]:
+                lan = "en"
+        session["lan"] = lan
+
+        texts = languages.languages[lan]
+
+        user = session.get("user")
+        if not user or "user_pk" not in user:
+            raise Exception("User is not logged in")
+        user_pk = user["user_pk"]
+
+        item_pk = str(uuid.uuid4())
+        item_name = x.validate_item_name()
+        item_address = x.validate_item_address()
+        item_lat = x.validate_item_lat()
+        item_lon = x.validate_item_lon()
+        item_created_at = int(time.time())
+        item_price = x.validate_item_price()
+
+        item_icon = "shelter.svg"
+        image_filenames = x.validate_item_images() 
+
+        image_values = ""
+        timestamp = int(time.time())
+        first_image_filename = image_filenames[0] 
+
+        for filename in image_filenames:
+            image_pk = uuid.uuid4().hex
+            image_values += f"('{image_pk}', '{item_pk}', '{filename}', {timestamp}),"
+
+
+        db, cursor = x.db()
+
+        q_item = """INSERT INTO items
+                    (item_pk, 
+                    item_name, 
+                    item_image, 
+                    item_address,
+                    item_icon,
+                    item_price,  
+                    item_lon, 
+                    item_lat, 
+                    item_created_at, 
+                    item_blocked_at, 
+                    item_updated_at,
+                    item_deleted_at,
+                    user_fk 
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+        cursor.execute(q_item, (
+            item_pk, 
+            item_name,
+            first_image_filename, 
+            item_address,
+            item_icon,
+            item_price,
+            item_lon, 
+            item_lat, 
+            item_created_at,
+            0,
+            None,
+            0,
+            user_pk
+        ))
+        if cursor.rowcount != 1:
+            raise Exception(texts["could_not_insert_item"])
+
+        if image_values:
+            image_values = image_values.rstrip(",")
+            q_images = f"INSERT INTO images (image_pk, item_pk, image_name, created_at) VALUES {image_values}"
+            cursor.execute(q_images)
+
+        db.commit()
+        session["message"] = texts.get("item_uploaded", "Item updated successfully")
+        session["message_type"] = "success"
+
+        return redirect(url_for("show_index", lan=lan))
+
+    except Exception as ex:
+        ic(ex)
+        if "db" in locals():
+            db.rollback()
+
+        old_values = request.form.to_dict()
+        ex_str = str(ex).lower()
+
+        if "invalid_shelter_name" in ex_str:
+            old_values.pop("item_name", None)
+            message = texts.get("invalid_shelter_name", "Invalid shelter name")
+        elif "address" in ex_str:
+            old_values.pop("item_address", None)
+            message = texts.get("invalid_address", "Invalid address")
+        elif "latitude" in ex_str:
+            old_values.pop("item_lat", None)
+            message = texts.get("invalid_latitude", "Invalid latitude")
+        elif "longitude" in ex_str:
+            old_values.pop("item_lon", None)
+            message = texts.get("invalid_longitude", "Invalid longitude")
+        elif "price" in ex_str:
+            old_values.pop("item_price", None)
+            message = texts.get("invalid_price", "Invalid price")
+        elif "no_images_uploaded" in ex_str:
+            message = texts.get("no_images_uploaded", "No images uploaded")
+        elif "not_enough_images_uploaded" in ex_str:
+            message = texts.get("not_enough_images_uploaded", "Please upload at least 3 images")
+        elif "max_upload_exceeded" in ex_str:
+            message = texts.get("max_upload_exceeded", "You can upload a maximum of 5 images.")
+        elif "file_extension_not_allowed" in ex_str:
+            message = texts.get("file_extension_not_allowed", "Only certain image types are allowed.")
+        elif "file_too_large" in ex_str:
+            message = texts.get("file_too_large", "Image too large.")
+        else:
+            message = texts.get("unknown_error", "An unexpected error occurred")
+
+        session["old_values"] = old_values
+        session["message"] = message
+        session["message_type"] = "error"
+
+        return redirect(url_for("show_profile", lan=lan))
+
+    finally:
+        if "cursor" in locals(): cursor.close()
+        if "db" in locals(): db.close()
+
+
 ###############################
 @app.post("/<lan>/update-item/<item_pk>")
 def update_item_inline(item_pk, lan):
@@ -1251,265 +1500,10 @@ def update_item_inline(item_pk, lan):
         if "db" in locals(): db.close()
 
 
-
-###############################
-@app.post("/<lan>/update-profile/<user_pk>")
-def update_profile(user_pk, lan):
-    languages_allowed = ["en", "dk"]
-    if lan not in languages_allowed:
-        lan = "en"
-    texts = languages.languages[lan]
-
-    try:
-        user_name = x.validate_user_name(texts)
-        user_last_name = x.validate_user_last_name(texts)
-        user_username = x.validate_user_username(texts)
-        user_email = x.validate_user_email(texts)
-        user_updated_at = int(time.time())
-
-        db, cursor = x.db()
-        q = """UPDATE users 
-               SET user_name=%s, user_last_name=%s, user_username=%s, 
-                   user_email=%s, user_updated_at=%s
-               WHERE user_pk=%s"""
-        cursor.execute(q, (
-            user_name, user_last_name, user_username, user_email,
-            user_updated_at, user_pk
-        ))
-
-        if cursor.rowcount != 1:
-            raise Exception(texts.get("update_failed", "Update failed"))
-
-        db.commit()
-
-        q = "SELECT * FROM users WHERE user_pk = %s"
-        cursor.execute(q, (user_pk,))
-        updated_user = cursor.fetchone()
-        if updated_user:
-            updated_user.pop("user_password", None)
-            session["user"] = updated_user
-
-        session["message"] = texts.get("profile_updated", "Profile updated successfully")
-        session["message_type"] = "success"
-        return redirect(url_for("show_profile", lan=lan))
-
-    except Exception as ex:
-        ic(ex)
-        if "db" in locals():
-            db.rollback()
-
-        old_values = request.form.to_dict()
-        error_str = str(ex).lower()
-
-        # Show inline field error
-        if "username" in error_str:
-            old_values.pop("user_username", None)
-            return render_template("update_profile.html",
-                                   message=texts.get("invalid_username", "Invalid username"),
-                                   message_type="error",
-                                   old_values=old_values,
-                                   user_username_error="input_error",
-                                   lan=lan,
-                                   languages=texts)
-
-        if "first_name" in error_str:
-            old_values.pop("user_name", None)
-            return render_template("update_profile.html",
-                                   message=texts.get("invalid_first_name", "Invalid first name"),
-                                   message_type="error",
-                                   old_values=old_values,
-                                   user_name_error="input_error",
-                                   lan=lan,
-                                   languages=texts)
-
-        if "last_name" in error_str:
-            old_values.pop("user_last_name", None)
-            return render_template("update_profile.html",
-                                   message=texts.get("invalid_last_name", "Invalid last name"),
-                                   message_type="error",
-                                   old_values=old_values,
-                                   user_last_name_error="input_error",
-                                   lan=lan,
-                                   languages=texts)
-
-        if "invalid_email" in error_str:
-            old_values.pop("user_email", None)
-            return render_template("update_profile.html",
-                                   message=texts.get("invalid_email", "Invalid email"),
-                                   message_type="error",
-                                   old_values=old_values,
-                                   user_email_error="input_error",
-                                   lan=lan,
-                                   languages=texts)
-
-        if "users.user_email" in error_str:
-            session["message"] = texts.get("email_exists", "Email already exists")
-            session["message_type"] = "error"
-            return redirect(url_for("show_profile", lan=lan))
-
-        if "users.user_username" in error_str:
-            session["message"] = texts.get("username_exists", "Username already exists")
-            session["message_type"] = "error"
-            return redirect(url_for("show_profile", lan=lan))
-
-        session["message"] = texts.get("unknown_error", str(ex))
-        session["message_type"] = "error"
-        return redirect(url_for("show_profile", lan=lan))
-
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
-
-
-###############################
-@app.delete("/<lan>/user")
-def delete_user(lan):
-    try:
-        lan = session.get("lan", lan)
-        if lan not in ["en", "dk"]:
-            lan = "en"
-        texts = languages.languages[lan]
-
-        message = session.pop("message", "")
-        message_type = session.pop("message_type", "")
-
-        user = session.get("user")
-        if not user:
-            raise Exception("no_user_logged_in")
-
-        user_pk = user["user_pk"]
-        deleted_at = int(time.time())
-
-        db, cursor = x.db()
-
-        # Slet brugeren (sæt user_deleted_at)
-        q1 = "UPDATE users SET user_deleted_at = %s WHERE user_pk = %s"
-        cursor.execute(q1, (deleted_at, user_pk))
-        if cursor.rowcount != 1:
-            raise Exception("delete_failed")
-
-        # Marker alle brugerens items som slettede
-        q2 = "UPDATE items SET item_deleted_at = %s WHERE user_fk = %s"
-        cursor.execute(q2, (deleted_at, user_pk))
-
-        db.commit()
-        session.pop("user", None)
-
-        message = texts.get("delete_success", "User account deleted successfully.")
-
-        return f"""
-        <mixhtml mix-replace="#toast-container">
-            <div class="toast-container">
-                <div class="toast toast-success">{message}</div>
-            </div>
-        </mixhtml>
-        <mixhtml mix-delay="2000" mix-redirect="/{lan}/login"></mixhtml>
-        """
-
-    except Exception as ex:
-        ic(ex)
-
-        if "db" in locals():
-            db.rollback()
-
-        lan = session.get("lan", lan)
-        if lan not in ["en", "dk"]:
-            lan = "en"
-        texts = languages.languages[lan]
-
-        message = texts.get("delete_failed", "An error occurred while deleting the user.")
-
-        return f"""
-        <mixhtml mix-replace="#toast-container">
-            <div class="toast-container">
-                <div class="toast toast-error">{message}</div>
-            </div>
-        </mixhtml>
-        """
-
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
-
-
-
-
-##############################
-@app.get("/reset-password/<verification_key>")
-def show_reset_password_default():
-    return redirect(url_for("reset-password", lan="en"))
-
-@app.get("/<lan>/reset-password/<verification_key>")
-def show_reset_password(verification_key, lan):
-    try:
-        message = session.pop("message", "")
-        message_type = session.pop("message_type", "")
-        languages_allowed = ["en", "dk"]
-        if lan not in languages_allowed: 
-            lan = "en"
-            session["lan"] = lan
-        texts = languages.languages[lan]
-        return render_template("reset_password.html", verification_key=verification_key, title=texts["page_title_reset"], languages=texts, message=message, message_type=message_type,)
-    except Exception as ex:
-        ic(ex)
-        return "Error loading reset form", 500
-
-
-###############################
-@app.post("/<lan>/reset-password/<verification_key>")
-def reset_password(verification_key, lan):
-    try:
-        languages_allowed = ["en", "dk"]
-        if lan not in languages_allowed:
-            lan = "en"
-        session["lan"] = lan
-        texts = languages.languages[lan]
-
-        new_password = x.validate_user_password(texts)
-        hashed_password = generate_password_hash(new_password)
-
-        db, cursor = x.db()
-
-        # Make sure the key is valid and not used
-        q = "SELECT user_pk FROM users WHERE user_verification_key = %s AND user_verified_at != 0"
-        cursor.execute(q, (verification_key,))
-        user = cursor.fetchone()
-        if not user:
-            raise Exception(texts["reset_invalid_link"])
-
-        # Update the password and invalidate the key
-        q_update = """
-        UPDATE users
-        SET user_password = %s,
-            user_verification_key = NULL,
-            user_updated_at = %s
-        WHERE user_pk = %s
-        """
-        cursor.execute(q_update, (hashed_password, int(time.time()), user["user_pk"]))
-        db.commit()
-
-        session["message"] = texts["reset_success"]
-        session["message_type"] = "success"
-        return redirect(url_for("show_login", lan=lan))
-
-    except Exception as ex:
-        ic(ex)
-        if "db" in locals(): db.rollback()
-        session["message"] = ex.args[0] if ex.args else texts.get("reset_failed", "Password reset failed.")
-        session["message_type"] = "error"
-        return redirect(url_for("show_forgot_password", verification_key=verification_key, lan=lan))
-
-    finally:
-        if "cursor" in locals(): cursor.close()
-        if "db" in locals(): db.close()
-
-
-
 ##############################
 @app.get("/single-item/<item_pk>")
 def show_single_item_default(item_pk):
     return redirect(url_for("show_single_item", lan="en", item_pk=item_pk))
-
 @app.get("/<lan>/single-item/<item_pk>")
 def show_single_item(item_pk, lan):
     try:
@@ -1521,7 +1515,6 @@ def show_single_item(item_pk, lan):
 
         db, cursor = x.db()
 
-        # Hent item
         q = "SELECT * FROM items WHERE item_pk = %s AND item_blocked_at = 0 AND item_deleted_at = 0"
         cursor.execute(q, (item_pk,))
         item = cursor.fetchone()
@@ -1531,17 +1524,14 @@ def show_single_item(item_pk, lan):
             session["message_type"] = "error"
             return redirect(url_for("show_index", lan=lan))
 
-        # Hent billeder for dette item
         q_images = "SELECT item_pk, image_name FROM images WHERE item_pk = %s"
         cursor.execute(q_images, (item_pk,))
         images = cursor.fetchall()
 
-        # Lav dict med item_pk som nøgle og liste af image_names som værdi
         images_by_item = {}
         for img in images:
             images_by_item.setdefault(img['item_pk'], []).append(img['image_name'])
 
-        # Load rates
         with open("rates.txt", "r") as file:
             rates = json.load(file)
 
@@ -1568,8 +1558,6 @@ def show_single_item(item_pk, lan):
             cursor.close()
         if "db" in locals():
             db.close()
-
-
 
 
 ##############################
